@@ -1,0 +1,213 @@
+{
+  "config": {
+    "name": "Nombre de la Estética",
+    "category": "Centro de estética",
+    "description": "Lifting de pestañas, depilación, uñas y más. Reservá tu turno online.",
+    "accentColor": "#a8566b",
+    "timezone": "America/Argentina/Buenos_Aires",
+    "slotMinutes": 15,
+    "bufferMinutes": 0,
+    "minNoticeHours": 2,
+    "maxDaysAhead": 30,
+    "clientChoosesProfessional": true,
+    "allowMultiService": true,
+    "cancelPolicy": "Podés cancelar o reprogramar hasta 24 horas antes sin cargo."
+  },
+  "services": {
+    "lifting-pestanas": {
+      "name": "Lifting de pestañas",
+      "category": "Lifting y pestañas",
+      "price": 15000,
+      "duration": 60,
+      "order": 1,
+      "active": true,
+      "deleted": false,
+      "description": "Realza y curva tus pestañas naturales. Efecto de ojos abiertos por semanas."
+    },
+    "perfilado-cejas": {
+      "name": "Perfilado y laminado de cejas",
+      "category": "Lifting y pestañas",
+      "price": 12000,
+      "duration": 45,
+      "order": 2,
+      "active": true,
+      "deleted": false,
+      "description": "Diseño y laminado para cejas definidas y peinadas."
+    },
+    "depi-piernas": {
+      "name": "Depilación de piernas completas",
+      "category": "Depilación",
+      "price": 14000,
+      "duration": 45,
+      "order": 3,
+      "active": true,
+      "deleted": false
+    },
+    "depi-axilas": {
+      "name": "Depilación de axilas",
+      "category": "Depilación",
+      "price": 6000,
+      "duration": 20,
+      "order": 4,
+      "active": true,
+      "deleted": false
+    },
+    "depi-rostro": {
+      "name": "Depilación de rostro",
+      "category": "Depilación",
+      "price": 5000,
+      "duration": 20,
+      "order": 5,
+      "active": true,
+      "deleted": false
+    },
+    "unas-semi": {
+      "name": "Esmaltado semipermanente",
+      "category": "Uñas",
+      "price": 10000,
+      "duration": 60,
+      "order": 6,
+      "active": true,
+      "deleted": false
+    },
+    "unas-soft": {
+      "name": "Uñas esculpidas / soft gel",
+      "category": "Uñas",
+      "price": 22000,
+      "duration": 120,
+      "order": 7,
+      "active": true,
+      "deleted": false
+    },
+    "unas-manicura": {
+      "name": "Manicura clásica",
+      "category": "Uñas",
+      "price": 7000,
+      "duration": 45,
+      "order": 8,
+      "active": true,
+      "deleted": false
+    },
+    "facial-limpieza": {
+      "name": "Limpieza facial profunda",
+      "category": "Facial",
+      "price": 18000,
+      "duration": 75,
+      "order": 9,
+      "active": true,
+      "deleted": false
+    }
+  },
+  "professionals": {
+    "pro-1": {
+      "name": "Profesional 1",
+      "description": "Lifting, cejas y pestañas",
+      "order": 1,
+      "active": true,
+      "deleted": false
+    },
+    "pro-2": {
+      "name": "Profesional 2",
+      "description": "Uñas y depilación",
+      "order": 2,
+      "active": true,
+      "deleted": false
+    }
+  },
+  "availability": {
+    "pro-1": {
+      "weekly": {
+        "0": {
+          "open": false
+        },
+        "1": {
+          "open": true,
+          "from": "09:00",
+          "to": "19:00",
+          "breakFrom": "13:00",
+          "breakTo": "14:00"
+        },
+        "2": {
+          "open": true,
+          "from": "09:00",
+          "to": "19:00",
+          "breakFrom": "13:00",
+          "breakTo": "14:00"
+        },
+        "3": {
+          "open": true,
+          "from": "09:00",
+          "to": "19:00",
+          "breakFrom": "13:00",
+          "breakTo": "14:00"
+        },
+        "4": {
+          "open": true,
+          "from": "09:00",
+          "to": "19:00",
+          "breakFrom": "13:00",
+          "breakTo": "14:00"
+        },
+        "5": {
+          "open": true,
+          "from": "09:00",
+          "to": "19:00",
+          "breakFrom": "13:00",
+          "breakTo": "14:00"
+        },
+        "6": {
+          "open": true,
+          "from": "09:00",
+          "to": "14:00"
+        }
+      }
+    },
+    "pro-2": {
+      "weekly": {
+        "0": {
+          "open": false
+        },
+        "1": {
+          "open": true,
+          "from": "09:00",
+          "to": "19:00",
+          "breakFrom": "13:00",
+          "breakTo": "14:00"
+        },
+        "2": {
+          "open": true,
+          "from": "09:00",
+          "to": "19:00",
+          "breakFrom": "13:00",
+          "breakTo": "14:00"
+        },
+        "3": {
+          "open": true,
+          "from": "09:00",
+          "to": "19:00",
+          "breakFrom": "13:00",
+          "breakTo": "14:00"
+        },
+        "4": {
+          "open": true,
+          "from": "09:00",
+          "to": "19:00",
+          "breakFrom": "13:00",
+          "breakTo": "14:00"
+        },
+        "5": {
+          "open": true,
+          "from": "09:00",
+          "to": "19:00",
+          "breakFrom": "13:00",
+          "breakTo": "14:00"
+        },
+        "6": {
+          "open": true,
+          "from": "09:00",
+          "to": "14:00"
+        }
+      }
+    }
+  }
+}
