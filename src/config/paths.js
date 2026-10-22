@@ -1,5 +1,5 @@
 // ÚNICO lugar que arma rutas de Firebase. Todo cuelga de la raíz exclusiva.
-const ROOT = "turneroEstetica";
+const ROOT = "turneroProfesionales";
 export const BUSINESS_ID = import.meta.env.VITE_BUSINESS_ID;
 const base = `${ROOT}/businesses/${BUSINESS_ID}`;
 

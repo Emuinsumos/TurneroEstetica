@@ -1,6 +1,6 @@
 # Base de datos (Firebase Realtime Database)
 
-Todo vive bajo `/turneroEstetica/businesses/{businessId}/`. Nada fuera de esa raíz.
+Todo vive bajo `/turneroProfesionales/businesses/{businessId}/`. Nada fuera de esa raíz.
 
 | Ruta | Contenido | Lectura | Escritura |
 |---|---|---|---|

@@ -1,37 +1,30 @@
 import { useRef, useState } from "react";
 import Img from "../../components/Img";
-import { compressImage } from "../../lib/image";
+import { CropQueue } from "./ImageCropper";
 import { dbSet, newKey } from "../../lib/db";
 import { P } from "../../config/paths";
 
-// Sube una foto: elegir del celular (galería o cámara) → se comprime → se guarda → devuelve "m:ID".
-async function uploadFile(file, opts) {
-  const dataUrl = await compressImage(file, opts);
+// Guarda una foto ya recortada y comprimida (data URL) → "m:ID"
+async function saveDataUrl(dataUrl) {
   const id = newKey(P.media);
   await dbSet(`${P.media}/${id}`, dataUrl);
   return `m:${id}`;
 }
 
-const kb = (n) => `${Math.round(n / 1024)} KB`;
+// aspect: número (ancho/alto) o lista [{ label, value }] para que se pueda elegir
+const toAspects = (a) => (Array.isArray(a) ? a : [{ label: "", value: a || 1 }]);
 
-export function ImageInput({ label, value, onChange, maxSide = 1000, maxBytes = 140000, round = false, hint }) {
+export function ImageInput({ label, value, onChange, maxSide = 1000, maxBytes = 140000, round = false, aspect = 1, hint }) {
   const input = useRef(null);
-  const [busy, setBusy] = useState(false);
+  const [files, setFiles] = useState(null);
   const [err, setErr] = useState("");
 
   async function pick(e) {
     const file = e.target.files?.[0];
     e.target.value = "";
     if (!file) return;
-    setBusy(true);
     setErr("");
-    try {
-      onChange(await uploadFile(file, { maxSide, maxBytes }));
-    } catch (ex) {
-      setErr(ex.message || "No se pudo subir la imagen");
-    } finally {
-      setBusy(false);
-    }
+    setFiles([file]); // se abre el recorte
   }
 
   return (
@@ -42,44 +35,40 @@ export function ImageInput({ label, value, onChange, maxSide = 1000, maxBytes = 
           {value ? <Img src={value} alt="" /> : <span className="muted small">Sin foto</span>}
         </div>
         <div className="btn-row">
-          <button type="button" className="btn ghost sm" disabled={busy} onClick={() => input.current?.click()}>
-            {busy ? "Subiendo…" : value ? "Cambiar foto" : "Elegir foto"}
+          <button type="button" className="btn ghost sm" onClick={() => input.current?.click()}>
+            {value ? "Cambiar foto" : "Elegir foto"}
           </button>
-          {value && !busy && <button type="button" className="btn ghost sm" onClick={() => onChange("")}>Quitar</button>}
+          {value && <button type="button" className="btn ghost sm" onClick={() => onChange("")}>Quitar</button>}
         </div>
         <input ref={input} type="file" accept="image/*" hidden onChange={pick} />
       </div>
       {hint && <small className="muted">{hint}</small>}
       {err && <p className="form-error">{err}</p>}
+      {files && (
+        <CropQueue
+          files={files} aspects={toAspects(aspect)} round={round} maxSide={maxSide} maxBytes={maxBytes}
+          save={saveDataUrl}
+          onFinish={(ids) => { setFiles(null); if (ids.length) onChange(ids[ids.length - 1]); }}
+        />
+      )}
     </div>
   );
 }
 
-export function ImageListInput({ label, values, onChange, max = 12, maxSide = 1000, maxBytes = 140000, hint }) {
+export function ImageListInput({ label, values, onChange, max = 12, maxSide = 1000, maxBytes = 140000, aspect = 1, hint }) {
   const input = useRef(null);
-  const [busy, setBusy] = useState("");
+  const [files, setFiles] = useState(null);
   const [err, setErr] = useState("");
 
   async function pick(e) {
-    const files = Array.from(e.target.files || []);
+    const picked = Array.from(e.target.files || []);
     e.target.value = "";
-    if (!files.length) return;
+    if (!picked.length) return;
     const room = max - values.length;
     if (room <= 0) { setErr(`Máximo ${max} fotos`); return; }
     setErr("");
-    const added = [];
-    try {
-      for (let i = 0; i < Math.min(files.length, room); i++) {
-        setBusy(`Subiendo ${i + 1} de ${Math.min(files.length, room)}…`);
-        added.push(await uploadFile(files[i], { maxSide, maxBytes }));
-      }
-      if (files.length > room) setErr(`Se subieron ${room}: el máximo es ${max} fotos.`);
-    } catch (ex) {
-      setErr(ex.message || "No se pudo subir la imagen");
-    } finally {
-      setBusy("");
-      if (added.length) onChange([...values, ...added]);
-    }
+    if (picked.length > room) setErr(`Se van a usar ${room}: el máximo es ${max} fotos.`);
+    setFiles(picked.slice(0, room)); // se abre el recorte, de a una
   }
 
   const move = (i, d) => {
@@ -106,13 +95,20 @@ export function ImageListInput({ label, values, onChange, max = 12, maxSide = 10
         ))}
       </div>
       <div className="btn-row">
-        <button type="button" className="btn ghost sm" disabled={!!busy || values.length >= max} onClick={() => input.current?.click()}>
-          {busy || "+ Agregar fotos"}
+        <button type="button" className="btn ghost sm" disabled={values.length >= max} onClick={() => input.current?.click()}>
+          + Agregar fotos
         </button>
       </div>
       <input ref={input} type="file" accept="image/*" multiple hidden onChange={pick} />
       {hint && <small className="muted">{hint}</small>}
       {err && <p className="form-error">{err}</p>}
+      {files && (
+        <CropQueue
+          files={files} aspects={toAspects(aspect)} maxSide={maxSide} maxBytes={maxBytes}
+          save={saveDataUrl}
+          onFinish={(ids) => { setFiles(null); if (ids.length) onChange([...values, ...ids]); }}
+        />
+      )}
     </div>
   );
 }

@@ -49,7 +49,7 @@ export default function AdminLogin() {
           required
         />
 
-        <label>PIN</label>
+        <label>Contraseña</label>
         <input
           type="password"
           value={pin}

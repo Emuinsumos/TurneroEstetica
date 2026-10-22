@@ -5,7 +5,7 @@
 - [ ] Reglas de `database.rules.json` publicadas en Firebase (Realtime Database → Reglas).
 - [ ] Authentication habilitado en Firebase (Comenzar). No hace falta activar ningún proveedor.
 - [ ] Variables en Vercel: las 6 `VITE_*` + `FIREBASE_SERVICE_ACCOUNT` (+ WhatsApp si se usa).
-- [ ] **Cambiar el PIN**: variables `ADMIN_USER` y `ADMIN_PIN` en Vercel (el `1234` es temporal) y Redeploy.
+- [ ] **Cambiar la contraseña**: entrar a `/admin` → pestaña **Acceso** (el `1234` es temporal). También se puede dejar para el dueño: el panel le avisa mientras use la de fábrica.
 - [ ] **Rotar la clave de la cuenta de servicio** si alguna vez se pegó en un chat: Google Cloud → IAM → Cuentas de servicio → Claves → borrar la vieja, crear una nueva y actualizar `FIREBASE_SERVICE_ACCOUNT`.
 - [ ] Cargar en el admin: Negocio (nombre, WhatsApp, dirección), Servicios, Profesionales, Agenda.
 
@@ -15,7 +15,7 @@
 3. Admin: confirmar, modificar la hora, cancelar → el horario cancelado vuelve a verse libre en `/reservar`.
 4. Admin: crear un turno manual; ver el historial del turno.
 5. Bloquear un día en Agenda → no se puede reservar ese día.
-6. `/admin` sin sesión pide usuario y PIN; 5 PIN incorrectos bloquean 15 min.
+6. `/admin` sin sesión pide usuario y contraseña; 5 intentos incorrectos bloquean 15 min.
 7. Una URL inexistente (ej. `/hola`) muestra "Página no encontrada".
 
 ## Límites conocidos

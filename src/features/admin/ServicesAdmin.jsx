@@ -19,13 +19,13 @@ export default function ServicesAdmin() {
 
   const add = () =>
     setForm({
-      id: null, name: "", category: "", description: "", price: "0", duration: "30",
+      id: null, name: "", description: "", price: "0", duration: "30",
       order: String(list.length + 1), active: true, professionalIds: {},
     });
 
   const edit = (s) =>
     setForm({
-      id: s.id, name: s.name || "", category: s.category || "", description: s.description || "",
+      id: s.id, name: s.name || "", description: s.description || "",
       price: String(s.price ?? 0), duration: String(s.duration ?? 30),
       order: String(s.order ?? 1), active: s.active !== false,
       professionalIds: s.professionalIds || {},
@@ -49,7 +49,6 @@ export default function ServicesAdmin() {
       const id = form.id || newKey(P.services);
       await dbUpdate(`${P.services}/${id}`, {
         name,
-        category: optional(form.category),
         description: optional(form.description),
         price,
         duration,
@@ -72,12 +71,6 @@ export default function ServicesAdmin() {
       <form className="admin-card" onSubmit={save}>
         <h3>{form.id ? "Editar servicio" : "Nuevo servicio"}</h3>
         <Field label="Nombre"><input value={form.name} onChange={(e) => set("name", e.target.value)} required /></Field>
-        <Field label="Categoría (opcional)" hint="Los servicios con la misma categoría se muestran juntos.">
-          <input list="cats" value={form.category} onChange={(e) => set("category", e.target.value)} placeholder="Depilación, Uñas, Pestañas…" />
-          <datalist id="cats">
-            {["Lifting y pestañas", "Cejas", "Depilación", "Uñas", "Facial", "Corporal", "Masajes"].map((c) => <option key={c} value={c} />)}
-          </datalist>
-        </Field>
         <Field label="Descripción (opcional)"><input value={form.description} onChange={(e) => set("description", e.target.value)} /></Field>
         <div className="grid2">
           <Field label="Precio ($)"><input type="number" min="0" inputMode="numeric" value={form.price} onChange={(e) => set("price", e.target.value)} /></Field>

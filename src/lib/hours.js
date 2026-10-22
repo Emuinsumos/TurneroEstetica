@@ -45,18 +45,3 @@ export const initials = (name = "") =>
     .slice(0, 2)
     .map((w) => w[0].toUpperCase())
     .join("");
-
-// Agrupa servicios por categoría (opcional). Si ninguno tiene categoría, devuelve un solo grupo sin título.
-export function groupByCategory(list) {
-  const map = new Map();
-  for (const s of list) {
-    const k = (s.category || "").trim();
-    if (!map.has(k)) map.set(k, []);
-    map.get(k).push(s);
-  }
-  if (map.size === 1 && map.has("")) return [{ category: "", items: list }];
-  const minOrder = (items) => Math.min(...items.map((i) => i.order || 0));
-  return [...map.entries()]
-    .map(([category, items]) => ({ category: category || "Otros", items }))
-    .sort((a, b) => (a.category === "Otros") - (b.category === "Otros") || minOrder(a.items) - minOrder(b.items));
-}

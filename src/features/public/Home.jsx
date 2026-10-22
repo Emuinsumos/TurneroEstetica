@@ -4,8 +4,9 @@ import {
   useConfig, useServices, useProfessionals, useAvailability, toList,
 } from "../../lib/data";
 import Img from "../../components/Img";
+import BrandIcon, { BRAND_BG } from "../../components/BrandIcon";
 import { useImgUrl } from "../../lib/media";
-import { dayRows, businessWeekly, money, initials, groupByCategory } from "../../lib/hours";
+import { dayRows, businessWeekly, money, initials } from "../../lib/hours";
 
 const Icon = {
   clock: (
@@ -20,16 +21,6 @@ const Icon = {
   wa: (
     <svg viewBox="0 0 24 24" width="26" height="26" fill="currentColor"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2zm5.2 14.2c-.2.6-1.3 1.2-1.8 1.2-.5.1-1 .2-3.3-.7-2.8-1.2-4.6-4-4.7-4.2-.1-.2-1.1-1.5-1.1-2.8s.7-2 1-2.3c.2-.3.5-.3.7-.3h.5c.2 0 .4 0 .6.5l.8 2c.1.2.1.4 0 .6l-.4.6c-.1.2-.3.3-.1.6.2.3.8 1.3 1.7 2.1 1.2 1 2.1 1.3 2.4 1.5.3.1.5.1.6-.1l.9-1.1c.2-.3.4-.2.6-.1l1.9.9c.3.1.5.2.5.3.1.3.1.8-.1 1.3z" /></svg>
   ),
-};
-
-// Íconos genéricos (neutros) para los enlaces a redes. No son los logos de las marcas.
-const svg = (children) => (
-  <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">{children}</svg>
-);
-const SocialIcon = {
-  Instagram: svg(<><rect x="3" y="7" width="18" height="13" rx="3" /><circle cx="12" cy="13.5" r="3.5" /><path d="M8 7l1.5-3h5L16 7" /></>),
-  Facebook: svg(<><circle cx="9" cy="8" r="3" /><circle cx="17" cy="9" r="2.4" /><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6M15 14.5c3 0 6 1.5 6 5.5" /></>),
-  TikTok: svg(<><path d="M9 18V6l10-2v12" /><circle cx="6.5" cy="18" r="2.5" /><circle cx="16.5" cy="16" r="2.5" /></>),
 };
 
 function Reveal({ children, className = "" }) {
@@ -66,9 +57,10 @@ export default function Home() {
   const hours = dayRows(businessWeekly(activeAv));
   const gallery = Array.isArray(c.gallery) ? c.gallery : Object.values(c.gallery || {});
   const socials = [
-    c.instagram && { label: "Instagram", href: c.instagram },
-    c.facebook && { label: "Facebook", href: c.facebook },
-    c.tiktok && { label: "TikTok", href: c.tiktok },
+    wa && { label: "WhatsApp", icon: "whatsapp", href: `https://wa.me/${wa}` },
+    c.instagram && { label: "Instagram", icon: "instagram", href: c.instagram },
+    c.tiktok && { label: "TikTok", icon: "tiktok", href: c.tiktok },
+    c.facebook && { label: "Facebook", icon: "facebook", href: c.facebook },
   ].filter(Boolean);
   const mapsHref = c.mapsUrl || (c.address ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(c.address)}` : null);
 
@@ -98,6 +90,15 @@ export default function Home() {
             <Link className="btn lg" to="/reservar">Reservar turno</Link>
             <a className="btn ghost lg" href="#servicios">Ver servicios</a>
           </div>
+          {socials.length > 0 && (
+            <div className="hero-social">
+              {socials.map((x) => (
+                <a key={x.label} className="brand-ic" style={{ background: BRAND_BG[x.icon] }} href={x.href} target="_blank" rel="noreferrer" aria-label={x.label} title={x.label}>
+                  <BrandIcon name={x.icon} size={24} />
+                </a>
+              ))}
+            </div>
+          )}
         </div>
       </header>
 
@@ -106,20 +107,15 @@ export default function Home() {
           <div className="wrap">
             <Reveal><p className="kicker">Lo que hacemos</p><h2>Servicios</h2></Reveal>
             <div className="svc-list">
-              {groupByCategory(services).map((g) => (
-                <div key={g.category || "_"} className="svc-group">
-                  {g.category && <h3 className="cat-title">{g.category}</h3>}
-                  {g.items.map((s) => (
-                    <Reveal key={s.id} className="svc">
-                      <div className="svc-main">
-                        <h3>{s.name}</h3>
-                        {s.description && <p className="muted">{s.description}</p>}
-                        <span className="chip">{Icon.clock} {s.duration} min</span>
-                      </div>
-                      <div className="price">{money(s.price)}</div>
-                    </Reveal>
-                  ))}
-                </div>
+              {services.map((s) => (
+                <Reveal key={s.id} className="svc">
+                  <div className="svc-main">
+                    <h3>{s.name}</h3>
+                    {s.description && <p className="muted">{s.description}</p>}
+                    <span className="chip">{Icon.clock} {s.duration} min</span>
+                  </div>
+                  <div className="price">{money(s.price)}</div>
+                </Reveal>
               ))}
             </div>
             <div className="center"><Link className="btn" to="/reservar">Reservar turno</Link></div>
@@ -199,7 +195,7 @@ export default function Home() {
             <span className="socials">
               {socials.map((s) => (
                 <a key={s.label} className="social-ic" href={s.href} target="_blank" rel="noreferrer" aria-label={s.label} title={s.label}>
-                  {SocialIcon[s.label] || s.label}
+                  <BrandIcon name={s.icon} size={18} />
                 </a>
               ))}
             </span>

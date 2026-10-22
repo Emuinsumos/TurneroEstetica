@@ -69,14 +69,14 @@ export default async function handler(req, res) {
   try {
     init();
     const b = process.env.VITE_BUSINESS_ID;
-    const base = `turneroEstetica/businesses/${b}`;
+    const base = `turneroProfesionales/businesses/${b}`;
     const db = admin.database();
 
     if (kind !== "nuevo") {
       const m = /^Bearer (.+)$/.exec(req.headers.authorization || "");
       if (!m) return res.status(401).json({ error: "No autorizado" });
       const t = await admin.auth().verifyIdToken(m[1]).catch(() => null);
-      if (!t || t.role !== "admin" || t.businessId !== b || t.root !== "turneroEstetica") return res.status(401).json({ error: "No autorizado" });
+      if (!t || t.role !== "admin" || t.businessId !== b) return res.status(401).json({ error: "No autorizado" });
     }
 
     const [aSnap, cSnap] = await Promise.all([db.ref(`${base}/appointments/${id}`).get(), db.ref(`${base}/config`).get()]);

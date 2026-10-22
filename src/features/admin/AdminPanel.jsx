@@ -7,6 +7,7 @@ import ServicesAdmin from "./ServicesAdmin";
 import ProfessionalsAdmin from "./ProfessionalsAdmin";
 import AgendaAdmin from "./AgendaAdmin";
 import BusinessAdmin from "./BusinessAdmin";
+import AccountAdmin from "./AccountAdmin";
 import { useAppointments, useProfessionals, useAvailability, useBlocked, toList } from "../../lib/data";
 import { todayAR } from "../../lib/db";
 import { dateLabel, blocksFor, capacityMinutes } from "../../lib/availability";
@@ -20,6 +21,7 @@ const TABS = [
   { id: "equipo", label: "Profesionales" },
   { id: "agenda", label: "Agenda" },
   { id: "negocio", label: "Negocio" },
+  { id: "acceso", label: "Acceso" },
 ];
 
 function Summary() {
@@ -91,6 +93,7 @@ export default function AdminPanel() {
           <span className="muted small"> · {BUSINESS_ID}</span>
         </div>
         <div className="admin-actions">
+          <a className="btn ghost sm" href="/manual.pdf" target="_blank" rel="noreferrer">Manual</a>
           <Link className="btn ghost sm" to="/">Ver página</Link>
           <button className="btn ghost sm" onClick={() => signOut(auth)}>Salir</button>
         </div>
@@ -110,6 +113,7 @@ export default function AdminPanel() {
         {tab === "equipo" && <ProfessionalsAdmin />}
         {tab === "agenda" && <AgendaAdmin />}
         {tab === "negocio" && <BusinessAdmin />}
+        {tab === "acceso" && <AccountAdmin />}
         {tab === "turnos" && <AppointmentsAdmin />}
       </main>
     </div>

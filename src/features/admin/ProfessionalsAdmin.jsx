@@ -60,8 +60,8 @@ export default function ProfessionalsAdmin() {
         <h3>{form.id ? "Editar profesional" : "Nuevo profesional"}</h3>
         <Field label="Nombre"><input value={form.name} onChange={(e) => set("name", e.target.value)} required /></Field>
         <Field label="Descripción / especialidad"><input value={form.description} onChange={(e) => set("description", e.target.value)} /></Field>
-        <ImageInput label="Foto de perfil" value={form.photo} onChange={(v) => set("photo", v)} maxSide={480} maxBytes={50000} round />
-        <ImageListInput label="Galería de trabajos" values={form.gallery} onChange={(v) => set("gallery", v)} hint="Elegí varias fotos del celular; se comprimen solas." />
+        <ImageInput label="Foto de perfil" value={form.photo} onChange={(v) => set("photo", v)} maxSide={480} maxBytes={50000} round aspect={1} hint="Acomodala para que la cara quede centrada." />
+        <ImageListInput label="Galería de trabajos" values={form.gallery} onChange={(v) => set("gallery", v)} aspect={4 / 3} hint="Elegí varias fotos: las acomodás de a una y quedan en formato 4:3." />
         <Field label="Orden"><input type="number" inputMode="numeric" value={form.order} onChange={(e) => set("order", e.target.value)} /></Field>
         <Check checked={form.active} onChange={(v) => set("active", v)}>Activo (los clientes pueden elegirlo)</Check>
         <Status st={st} />

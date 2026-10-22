@@ -15,7 +15,7 @@ function BusinessForm({ c }) {
   const gal = Array.isArray(c.gallery) ? c.gallery : Object.values(c.gallery || {});
   const [f, setF] = useState({
     name: c.name || "", category: c.category || "", description: c.description || "",
-    accentColor: c.accentColor || "#a8566b", logo: c.logo || "", heroImage: c.heroImage || "",
+    accentColor: c.accentColor || "#d4a85a", logo: c.logo || "", heroImage: c.heroImage || "",
     gallery: gal,
     whatsapp: c.whatsapp || "", address: c.address || "", mapsUrl: c.mapsUrl || "",
     instagram: c.instagram || "", facebook: c.facebook || "", tiktok: c.tiktok || "",
@@ -74,12 +74,12 @@ function BusinessForm({ c }) {
       <div className="admin-card">
         <h3>Datos del negocio</h3>
         {text("name", "Nombre", { required: true })}
-        {text("category", "Rubro", { placeholder: "Estética, uñas, depilación…" })}
+        {text("category", "Rubro", { placeholder: "Barbería, manicura, masajes…" })}
         <Field label="Descripción"><textarea rows={3} value={f.description} onChange={(e) => set("description", e.target.value)} /></Field>
         <Field label="Color de acento"><input type="color" value={f.accentColor} onChange={(e) => set("accentColor", e.target.value)} style={{ height: 48, padding: 4 }} /></Field>
-        <ImageInput label="Logo" value={f.logo} onChange={(v) => set("logo", v)} maxSide={320} maxBytes={40000} round hint="Se achica solo. Mejor si es cuadrado." />
-        <ImageInput label="Imagen de portada" value={f.heroImage} onChange={(v) => set("heroImage", v)} maxSide={1400} maxBytes={200000} hint="Se achica y comprime automáticamente." />
-        <ImageListInput label="Galería de trabajos" values={f.gallery} onChange={(v) => set("gallery", v)} hint="Elegí varias fotos del celular; se comprimen solas." />
+        <ImageInput label="Logo" value={f.logo} onChange={(v) => set("logo", v)} maxSide={320} maxBytes={40000} round aspect={1} hint="Al elegirla vas a poder acomodarla y centrarla." />
+        <ImageInput label="Imagen de portada" value={f.heroImage} onChange={(v) => set("heroImage", v)} maxSide={1400} maxBytes={200000} aspect={[{ label: "Vertical (celular)", value: 4 / 5 }, { label: "Horizontal (compu)", value: 16 / 9 }]} hint="Al elegirla vas a poder acomodarla. Se ve de fondo en la portada." />
+        <ImageListInput label="Galería de trabajos" values={f.gallery} onChange={(v) => set("gallery", v)} aspect={1} hint="Elegí varias fotos: las acomodás de a una y quedan cuadradas." />
       </div>
 
       <div className="admin-card">

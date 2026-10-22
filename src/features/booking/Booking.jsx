@@ -11,7 +11,7 @@ import {
 import {
   getSlots, blocksFor, nowInTz, dayDiff, addDays, dateLabel, toMin, toHHMM, lockCells,
 } from "../../lib/availability";
-import { money, initials, groupByCategory } from "../../lib/hours";
+import { money, initials } from "../../lib/hours";
 import { waLink, bookingMessage } from "../../lib/whatsapp";
 import { validateClientData } from "../../lib/validation";
 import Calendar from "./Calendar";
@@ -248,24 +248,19 @@ export default function Booking() {
           <h2>Elegí el servicio</h2>
           {services.length === 0 && <p className="muted">Por ahora no hay servicios disponibles.</p>}
           <div className="opt-list">
-            {groupByCategory(services).map((g) => (
-              <div key={g.category || "_"} className="opt-list">
-                {g.category && <h3 className="cat-title">{g.category}</h3>}
-                {g.items.map((s) => {
-                  const on = selIds.includes(s.id);
-                  return (
-                    <button key={s.id} type="button" className={`opt ${on ? "on" : ""}`} onClick={() => toggleService(s)}>
-                      <span className="opt-main">
-                        <b>{s.name}</b>
-                        {s.description && <span className="muted small">{s.description}</span>}
-                        <span className="muted small">{s.duration} min</span>
-                      </span>
-                      <span className="price">{money(s.price)}</span>
-                    </button>
-                  );
-                })}
-              </div>
-            ))}
+            {services.map((s) => {
+              const on = selIds.includes(s.id);
+              return (
+                <button key={s.id} type="button" className={`opt ${on ? "on" : ""}`} onClick={() => toggleService(s)}>
+                  <span className="opt-main">
+                    <b>{s.name}</b>
+                    {s.description && <span className="muted small">{s.description}</span>}
+                    <span className="muted small">{s.duration} min</span>
+                  </span>
+                  <span className="price">{money(s.price)}</span>
+                </button>
+              );
+            })}
           </div>
           {multi && (
             <div className="sticky-cta">
@@ -296,7 +291,7 @@ export default function Booking() {
               </button>
             ))}
           </div>
-          {selectedPro && <Carousel images={galleryOf(selectedPro)} title={`Trabajos de ${selectedPro.name}`} />}
+          {selectedPro && <Carousel key={selectedPro.id} images={galleryOf(selectedPro)} title={`Trabajos de ${selectedPro.name}`} />}
           <div className="sticky-cta">
             <button className="btn lg" type="button" disabled={!profChoice} onClick={() => go(1)}>
               {profChoice ? "Continuar" : "Elegí un profesional"}
@@ -314,7 +309,7 @@ export default function Booking() {
               {selectedPro.name}
             </p>
           )}
-          {selectedPro && <Carousel images={galleryOf(selectedPro)} />}
+          {selectedPro && <Carousel key={selectedPro.id} images={galleryOf(selectedPro)} />}
           <Calendar
             today={today}
             maxDate={maxDate}
