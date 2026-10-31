@@ -2,7 +2,7 @@
 import crypto from "node:crypto";
 import admin from "firebase-admin";
 
-export const ROOT = "turneroProfesionales";
+export const ROOT = "turneroEstetica";
 export const MAX_ATTEMPTS = 5;
 export const LOCK_MS = 15 * 60 * 1000;
 

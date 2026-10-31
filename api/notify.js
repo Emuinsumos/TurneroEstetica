@@ -69,7 +69,7 @@ export default async function handler(req, res) {
   try {
     init();
     const b = process.env.VITE_BUSINESS_ID;
-    const base = `turneroProfesionales/businesses/${b}`;
+    const base = `turneroEstetica/businesses/${b}`;
     const db = admin.database();
 
     if (kind !== "nuevo") {
