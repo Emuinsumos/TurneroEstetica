@@ -6,7 +6,7 @@ import {
 import Img from "../../components/Img";
 import BrandIcon, { BRAND_BG } from "../../components/BrandIcon";
 import { useImgUrl } from "../../lib/media";
-import { dayRows, businessWeekly, money, initials } from "../../lib/hours";
+import { dayRows, businessWeekly, money, initials, groupByCategory } from "../../lib/hours";
 
 const Icon = {
   clock: (
@@ -107,7 +107,10 @@ export default function Home() {
           <div className="wrap">
             <Reveal><p className="kicker">Lo que hacemos</p><h2>Servicios</h2></Reveal>
             <div className="svc-list">
-              {services.map((s) => (
+              {groupByCategory(services).map((g) => (
+            <div key={g.category || "_"} className="svc-group">
+              {g.category && <h3 className="cat-title">{g.category}</h3>}
+              {g.items.map((s) => (
                 <Reveal key={s.id} className="svc">
                   <div className="svc-main">
                     <h3>{s.name}</h3>
@@ -117,6 +120,8 @@ export default function Home() {
                   <div className="price">{money(s.price)}</div>
                 </Reveal>
               ))}
+            </div>
+          ))}
             </div>
             <div className="center"><Link className="btn" to="/reservar">Reservar turno</Link></div>
           </div>
