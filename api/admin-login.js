@@ -35,7 +35,7 @@ export default async function handler(req, res) {
     }
 
     await ref.remove();
-    const token = await admin.auth().createCustomToken(`admin:${b}`, { role: "admin", businessId: b });
+    const token = await admin.auth().createCustomToken(`admin:${b}`, { role: "admin", businessId: b, root: "turneroEstetica" });
     return res.status(200).json({ token });
   } catch (e) {
     return res.status(500).json({ error: "Error del servidor" });
