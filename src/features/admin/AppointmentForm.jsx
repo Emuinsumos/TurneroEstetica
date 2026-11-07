@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
-import { useConfig, useServices, useProfessionals, useAvailability, useBlocked, useLocks, toList } from "../../lib/data";
-import { getSlots, blocksFor, toMin, toHHMM, dateLabel } from "../../lib/availability";
+import { useConfig, useServices, useProfessionals, useAvailability, useBlocked, useLocks, useServiceAgenda, toList } from "../../lib/data";
+import { getSlots, blocksFor, agendaTimesFor, toMin, toHHMM, dateLabel } from "../../lib/availability";
 import { saveAppointment } from "../../lib/appointmentsApi";
 import { diffText, isActive } from "../../lib/appointmentPlan";
 import { validateClientData } from "../../lib/validation";
@@ -16,6 +16,7 @@ export default function AppointmentForm({ existing, onSaved, onCancel }) {
   const pr = useProfessionals();
   const av = useAvailability();
   const bl = useBlocked();
+  const ag = useServiceAgenda();
   const [st, run] = useSave();
   const [f, setF] = useState(() => ({
     clientName: existing?.clientName || "",
@@ -56,6 +57,7 @@ export default function AppointmentForm({ existing, onSaved, onCancel }) {
     for (const [k, v] of Object.entries(raw)) if (!existing || v !== existing.id) locks[k] = v;
     const out = getSlots({
       date: f.date, weekly: av.data?.[f.professionalId]?.weekly,
+      agenda: agendaTimesFor(service, ag.data, f.date),
       blocks: blocksFor(toList(bl.data), f.professionalId), locks,
       duration, buffer, step, tz, minNoticeHours: 0, maxDaysAhead: 3650,
     });
@@ -65,9 +67,9 @@ export default function AppointmentForm({ existing, onSaved, onCancel }) {
       out.sort();
     }
     return out;
-  }, [f.professionalId, f.date, duration, locksQ, av.data, bl.data, buffer, step, tz, existing]);
+  }, [f.professionalId, f.date, duration, locksQ, av.data, bl.data, ag.data, service, buffer, step, tz, existing]);
 
-  if (sv.loading || pr.loading || av.loading || bl.loading || cfg.loading) return <p className="muted">Cargando…</p>;
+  if (sv.loading || pr.loading || av.loading || bl.loading || cfg.loading || ag.loading) return <p className="muted">Cargando…</p>;
 
   function pickService(id) {
     const s = services.find((x) => x.id === id);

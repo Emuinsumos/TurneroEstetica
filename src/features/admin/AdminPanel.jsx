@@ -6,6 +6,7 @@ import { BUSINESS_ID } from "../../config/paths";
 import ServicesAdmin from "./ServicesAdmin";
 import ProfessionalsAdmin from "./ProfessionalsAdmin";
 import AgendaAdmin from "./AgendaAdmin";
+import ServiceAgendaAdmin from "./ServiceAgendaAdmin";
 import BusinessAdmin from "./BusinessAdmin";
 import AccountAdmin from "./AccountAdmin";
 import { useAppointments, useProfessionals, useAvailability, useBlocked, toList } from "../../lib/data";
@@ -20,6 +21,7 @@ const TABS = [
   { id: "servicios", label: "Servicios" },
   { id: "equipo", label: "Profesionales" },
   { id: "agenda", label: "Agenda" },
+  { id: "agendaServ", label: "Agenda servicios" },
   { id: "negocio", label: "Negocio" },
   { id: "acceso", label: "Acceso" },
 ];
@@ -112,6 +114,7 @@ export default function AdminPanel() {
         {tab === "servicios" && <ServicesAdmin />}
         {tab === "equipo" && <ProfessionalsAdmin />}
         {tab === "agenda" && <AgendaAdmin />}
+        {tab === "agendaServ" && <ServiceAgendaAdmin />}
         {tab === "negocio" && <BusinessAdmin />}
         {tab === "acceso" && <AccountAdmin />}
         {tab === "turnos" && <AppointmentsAdmin />}

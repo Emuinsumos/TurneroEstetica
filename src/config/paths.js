@@ -11,6 +11,7 @@ export const P = {
   availabilityAll: `${base}/availability`,
   availability: (profId) => `${base}/availability/${profId}`,
   blockedSlots: `${base}/blockedSlots`,
+  serviceAgenda: `${base}/serviceAgenda`,
   appointments: `${base}/appointments`,
   appointment: (id) => `${base}/appointments/${id}`,
   slotLocks: (profId, date) => `${base}/slotLocks/${profId}/${date}`,

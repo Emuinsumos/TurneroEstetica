@@ -6,10 +6,10 @@ import { db } from "../../config/firebase";
 import { P } from "../../config/paths";
 import { newKey } from "../../lib/db";
 import {
-  useConfig, useServices, useProfessionals, useAvailability, useBlocked, useLocks, toList,
+  useConfig, useServices, useProfessionals, useAvailability, useBlocked, useLocks, useServiceAgenda, toList,
 } from "../../lib/data";
 import {
-  getSlots, blocksFor, nowInTz, dayDiff, addDays, dateLabel, toMin, toHHMM, lockCells,
+  getSlots, blocksFor, agendaTimesFor, nowInTz, dayDiff, addDays, dateLabel, toMin, toHHMM, lockCells,
 } from "../../lib/availability";
 import { money, initials, groupByCategory } from "../../lib/hours";
 import { waLink, bookingMessage } from "../../lib/whatsapp";
@@ -28,6 +28,7 @@ export default function Booking() {
   const pr = useProfessionals();
   const av = useAvailability();
   const bl = useBlocked();
+  const ag = useServiceAgenda();
 
   const [stepName, setStepName] = useState("service");
   const [selIds, setSelIds] = useState([]);
@@ -90,13 +91,22 @@ export default function Booking() {
   // ---- carga / errores ----
   const error = cfg.error || sv.error || pr.error || av.error || bl.error;
   if (error) return <Shell><p className="form-error">No se pudo cargar: {error}</p></Shell>;
-  if (cfg.loading || sv.loading || pr.loading || av.loading || bl.loading)
+  if (cfg.loading || sv.loading || pr.loading || av.loading || bl.loading || ag.loading)
     return <div className="splash"><div className="spinner" /></div>;
   if (!cfg.data) return <Shell><p>Negocio no configurado.</p></Shell>;
 
   // ---- cálculo de disponibilidad ----
-  const ctx = (p) => ({
+  // Servicios con agenda: solo se ofrecen los horarios cargados para ese día.
+  // Si hay varios servicios con agenda, valen los horarios que tienen en común.
+  const agendaFor = (d) => {
+    const lists = chosen.filter((s) => s.agenda === true).map((s) => agendaTimesFor(s, ag.data, d));
+    if (lists.length === 0) return null;
+    return lists.reduce((a, b) => a.filter((t) => b.includes(t)));
+  };
+
+  const ctx = (p, d) => ({
     weekly: av.data?.[p.id]?.weekly,
+    agenda: agendaFor(d),
     blocks: blocksFor(blocks, p.id),
     duration, buffer, step: stepMin, tz, minNoticeHours: notice, maxDaysAhead: maxDays,
   });
@@ -106,7 +116,7 @@ export default function Booking() {
   const dayStatus = (d) => {
     const diff = dayDiff(today, d);
     if (diff < 0 || diff > maxDays) return "disabled";
-    return activePros.some((p) => getSlots({ ...ctx(p), date: d, locks: null }).length > 0)
+    return activePros.some((p) => getSlots({ ...ctx(p, d), date: d, locks: null }).length > 0)
       ? "open" : "closed";
   };
 
@@ -114,7 +124,7 @@ export default function Booking() {
   if (date && !locksState.loading && !locksState.error) {
     const map = new Map();
     for (const p of activePros) {
-      for (const t of getSlots({ ...ctx(p), date, locks: locksState.locks[p.id] || {} })) {
+      for (const t of getSlots({ ...ctx(p, date), date, locks: locksState.locks[p.id] || {} })) {
         if (!map.has(t)) map.set(t, p.id);
       }
     }

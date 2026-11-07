@@ -20,6 +20,7 @@ export const useServices = () => useNode(P.services);
 export const useProfessionals = () => useNode(P.professionals);
 export const useAvailability = () => useNode(P.availabilityAll);
 export const useBlocked = () => useNode(P.blockedSlots);
+export const useServiceAgenda = () => useNode(P.serviceAgenda);
 
 export const toList = (obj) =>
   Object.entries(obj || {}).map(([id, v]) => ({ id, ...v }));

@@ -20,7 +20,7 @@ export default function ServicesAdmin() {
   const add = () =>
     setForm({
       id: null, name: "", description: "", price: "0", duration: "30",
-      order: String(list.length + 1), active: true, professionalIds: {},
+      order: String(list.length + 1), active: true, agenda: false, professionalIds: {},
     });
 
   const edit = (s) =>
@@ -28,6 +28,7 @@ export default function ServicesAdmin() {
       id: s.id, name: s.name || "", description: s.description || "",
       price: String(s.price ?? 0), duration: String(s.duration ?? 30),
       order: String(s.order ?? 1), active: s.active !== false,
+      agenda: s.agenda === true,
       professionalIds: s.professionalIds || {},
     });
 
@@ -54,6 +55,7 @@ export default function ServicesAdmin() {
         duration,
         order: Number(form.order) || 0,
         active: form.active,
+        agenda: form.agenda ? true : null,
         deleted: false,
         professionalIds: Object.keys(form.professionalIds).length ? form.professionalIds : null,
       });
@@ -85,6 +87,10 @@ export default function ServicesAdmin() {
           ))}
         </div>
         <Check checked={form.active} onChange={(v) => set("active", v)}>Visible para los clientes</Check>
+        <Check checked={form.agenda} onChange={(v) => set("agenda", v)}>Habilitar agenda (días y horarios puntuales)</Check>
+        {form.agenda && (
+          <small className="muted">Este servicio solo se podrá reservar en los días y horarios que cargues en "Agenda servicios".</small>
+        )}
         <Status st={st} />
         <div className="btn-row">
           <button className="btn" type="submit" disabled={st.busy}>{st.busy ? "Guardando…" : "Guardar"}</button>
@@ -105,7 +111,7 @@ export default function ServicesAdmin() {
       {list.map((s) => (
         <div className="admin-row" key={s.id}>
           <div>
-            <b>{s.name}</b> {s.active === false && <span className="tag">oculto</span>}
+            <b>{s.name}</b> {s.active === false && <span className="tag">oculto</span>} {s.agenda === true && <span className="tag">agenda</span>}
             <p className="muted small">{money(s.price)} · {s.duration} min</p>
           </div>
           <div className="btn-row">
