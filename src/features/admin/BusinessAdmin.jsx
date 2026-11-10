@@ -92,7 +92,7 @@ function BusinessForm({ c }) {
         {text("instagram", "Instagram (link)", { type: "url" })}
         {text("facebook", "Facebook (link)", { type: "url" })}
         {text("tiktok", "TikTok (link)", { type: "url" })}
-        {text("shopUrl", "Tienda online (link)", { type: "url" }, "Aparece como un botón con carrito al lado de las redes. Dejalo vacío para ocultarlo.")}
+        {text("shopUrl", "Tienda online (link)", { type: "url" }, "Aparece como un botón con ícono de tienda al lado de las redes. Dejalo vacío para ocultarlo.")}
         <Field label="Cancelaciones y puntualidad"><textarea rows={3} value={f.cancelPolicy} onChange={(e) => set("cancelPolicy", e.target.value)} /></Field>
       </div>
 
