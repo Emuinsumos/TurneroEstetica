@@ -61,6 +61,7 @@ export default function Home() {
     c.instagram && { label: "Instagram", icon: "instagram", href: c.instagram },
     c.tiktok && { label: "TikTok", icon: "tiktok", href: c.tiktok },
     c.facebook && { label: "Facebook", icon: "facebook", href: c.facebook },
+    /^https?:\/\//i.test(c.shopUrl || "") && { label: "Tienda online", icon: "shop", href: c.shopUrl },
   ].filter(Boolean);
   const mapsHref = c.mapsUrl || (c.address ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(c.address)}` : null);
 

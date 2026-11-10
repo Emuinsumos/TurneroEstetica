@@ -19,6 +19,7 @@ function BusinessForm({ c }) {
     gallery: gal,
     whatsapp: c.whatsapp || "", address: c.address || "", mapsUrl: c.mapsUrl || "",
     instagram: c.instagram || "", facebook: c.facebook || "", tiktok: c.tiktok || "",
+    shopUrl: c.shopUrl || "",
     cancelPolicy: c.cancelPolicy || "",
     slotMinutes: String(c.slotMinutes ?? 15), bufferMinutes: String(c.bufferMinutes ?? 0),
     minNoticeHours: String(c.minNoticeHours ?? 2), maxDaysAhead: String(c.maxDaysAhead ?? 30),
@@ -58,6 +59,7 @@ function BusinessForm({ c }) {
         instagram: optional(f.instagram),
         facebook: optional(f.facebook),
         tiktok: optional(f.tiktok),
+        shopUrl: optional(f.shopUrl),
         cancelPolicy: optional(f.cancelPolicy),
         slotMinutes: num("slotMinutes", 5, "El intervalo de turnos"),
         bufferMinutes: num("bufferMinutes", 0, "El tiempo entre clientes"),
@@ -90,6 +92,7 @@ function BusinessForm({ c }) {
         {text("instagram", "Instagram (link)", { type: "url" })}
         {text("facebook", "Facebook (link)", { type: "url" })}
         {text("tiktok", "TikTok (link)", { type: "url" })}
+        {text("shopUrl", "Tienda online (link)", { type: "url" }, "Aparece como un botón con carrito al lado de las redes. Dejalo vacío para ocultarlo.")}
         <Field label="Cancelaciones y puntualidad"><textarea rows={3} value={f.cancelPolicy} onChange={(e) => set("cancelPolicy", e.target.value)} /></Field>
       </div>
 
