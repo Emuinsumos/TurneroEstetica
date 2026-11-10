@@ -55,3 +55,20 @@ export function clientMessage(kind, a, dateText) {
   }[kind] || "Te esperamos. Si necesitás modificar o cancelar tu turno, contactanos por este medio.";
   return [head, "", ...detailLines(a, dateText).filter((l) => l !== null), "", tail].join("\n");
 }
+
+// Recordatorio del turno de mañana (lo manda el negocio al cliente)
+export function reminderMessage(a, dateText, { businessName, address, mapsUrl } = {}) {
+  const first = String(a.clientName || "").split(" ")[0];
+  return [
+    `¡Hola, ${first}! Te recordamos que mañana tenés turno${businessName ? ` en ${businessName}` : ""}:`,
+    "",
+    `Fecha: ${dateText}`,
+    `Hora: ${a.time}`,
+    `Profesional: ${a.professionalName}`,
+    `Servicio: ${a.serviceName}`,
+    address ? `Dirección: ${address}` : null,
+    mapsUrl ? `Cómo llegar: ${mapsUrl}` : null,
+    "",
+    "Si no podés venir, avisanos por este medio así liberamos el horario. ¡Te esperamos!",
+  ].filter((l) => l !== null).join("\n");
+}

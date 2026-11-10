@@ -7,6 +7,7 @@ const P = {
 };
 
 export const BRAND_BG = {
+  shop: "var(--accent)",
   instagram: "linear-gradient(45deg,#f09433 0%,#e6683c 25%,#dc2743 50%,#cc2366 75%,#bc1888 100%)",
   tiktok: "#000",
   whatsapp: "#25D366",
@@ -14,6 +15,16 @@ export const BRAND_BG = {
 };
 
 export default function BrandIcon({ name, size = 22 }) {
+  if (name === "shop") {
+    // Carrito de compras (trazo redondeado, estilo Lucide)
+    return (
+      <svg viewBox="0 0 24 24" height={size} width={size} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+        <circle cx="8" cy="21" r="1" />
+        <circle cx="19" cy="21" r="1" />
+        <path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12" />
+      </svg>
+    );
+  }
   const p = P[name];
   if (!p) return null;
   return (
