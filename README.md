@@ -25,7 +25,7 @@ Nunca subas ese .json a GitHub. Bloqueo: 5 intentos fallidos = 15 min.
 El login solo anda desplegado en Vercel (o con `vercel dev`), no con `npm run dev`.
 
 ## Datos en Firebase
-Todo vive bajo `/turneroProfesionales/businesses/{businessId}/`.
+Todo vive bajo `/turneroEstetica/businesses/{businessId}/`.
 Reglas en `database.rules.json` (ya publicadas, fusionadas con el otro proyecto).
 
 ## Campos opcionales de `config` (se ven en la página si existen)

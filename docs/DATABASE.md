@@ -1,6 +1,6 @@
 # Base de datos (Firebase Realtime Database)
 
-Todo vive bajo `/turneroProfesionales/businesses/{businessId}/`. Nada fuera de esa raíz.
+Todo vive bajo `/turneroEstetica/businesses/{businessId}/`. Nada fuera de esa raíz.
 
 | Ruta | Contenido | Lectura | Escritura |
 |---|---|---|---|
@@ -57,3 +57,26 @@ o llenar la agenda con turnos falsos. Si eso pasa, se resuelve con una función 
 - `media/{id}`: string con la imagen comprimida (`data:image/webp;base64,...`, máx. ~300 KB). Lectura pública, escritura solo admin.
 - `config.logo`, `config.heroImage`, `config.gallery[]`, `professionals/*.photo` y `.gallery[]` guardan `"m:{id}"` (o un link http normal).
 - El navegador baja cada foto una vez y la guarda en localStorage. Las fotos reemplazadas quedan huérfanas en `media` (ocupan poco; se pueden borrar desde la consola de Firebase).
+
+## Seña (monto fijo, manual)
+**Datos de pago** — `payment`: `enabled`, `amount` (entero), `alias`, `holder`, `bank`, `updatedAt`.
+- Lectura pública (la clienta necesita ver a dónde transferir). **Escritura: nadie desde el navegador** (`".write": false`).
+- Lo escribe únicamente `api/payment.js` (servidor, clave de servicio). Para cambiarlo hace falta sesión de admin **y** volver a escribir la contraseña (con bloqueo por intentos); si todavía está la contraseña de fábrica, lo rechaza.
+- Cada cambio queda en `auditLog/{id}` (`kind: "payment"`, hora del servidor, qué campo cambió: `from` → `to`). `auditLog`: lo lee el admin, **no lo escribe nadie desde el navegador**.
+
+**Turno** — `appointments/{id}`: `depositAmount` (pesos), `depositStatus` (`pendiente` | `recibida` | `eximida`), `depositPaidAt`.
+- Las reglas obligan a que una reserva de cliente traiga `depositStatus: "pendiente"` y el monto exacto de `payment/amount` (o el precio del servicio si es menor) cuando la seña está activa. Pasarla a `recibida`/`eximida` es solo del admin.
+- `createdAt` tiene que ser la hora del servidor (`=== now`): de eso depende el plazo y nadie puede falsearlo.
+
+**Línea de tiempo** (desde la reserva; el horario queda bloqueado todo el tiempo):
+| Horas | Qué pasa |
+|---|---|
+| 0 – 24 | plazo normal para pagar |
+| 24 – 72 | en rojo: "todavía no señó" (alerta en Resumen y contador en Turnos) |
+| 72 | `api/sweep.js` lo cancela solo (estado `cancelado`, historial "Cancelación automática", horario liberado) |
+
+El admin puede cancelar a mano en cualquier momento, marcar "Seña recibida" o "Eximir seña" (ambas lo confirman y ya no se cancela solo).
+`api/sweep.js` corre al abrir la pantalla de reservas y el admin (como máximo 1 vez por minuto) y con un cron diario (`vercel.json`) como respaldo. Decide con su propio reloj y vuelve a verificar dentro de una transacción, así que es seguro dejarlo público.
+
+**Reglas**: `database.rules.json` es el archivo completo de reglas de la base de Firebase de la estética (base propia, distinta de la de la barbería). Se pega entero en Realtime Database → Reglas.
+Límite conocido: las reglas no pueden evitar que alguien arme reservas falsas a mano para ocupar horarios; ahora esas reservas se cancelan solas a las 72 hs si no hay seña.

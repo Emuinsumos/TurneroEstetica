@@ -6,15 +6,18 @@ import { db } from "../../config/firebase";
 import { P } from "../../config/paths";
 import { newKey } from "../../lib/db";
 import {
-  useConfig, useServices, useProfessionals, useAvailability, useBlocked, useLocks, useServiceAgenda, toList,
+  useConfig, useServices, useProfessionals, useAvailability, useBlocked, useLocks, useServiceAgenda, usePayment, toList,
 } from "../../lib/data";
+import { triggerSweep } from "../../lib/sweep";
 import {
   getSlots, blocksFor, agendaTimesFor, nowInTz, dayDiff, addDays, dateLabel, toMin, toHHMM, lockCells,
 } from "../../lib/availability";
 import { money, initials, groupByCategory } from "../../lib/hours";
 import { waLink, bookingMessage } from "../../lib/whatsapp";
 import { validateClientData } from "../../lib/validation";
+import { depositAmountFor, paymentConfig, DEPOSIT_HOURS, EXPIRE_HOURS } from "../../lib/deposit";
 import Calendar from "./Calendar";
+import DepositBox from "./DepositBox";
 import Carousel from "./Carousel";
 import Img from "../../components/Img";
 
@@ -29,6 +32,7 @@ export default function Booking() {
   const av = useAvailability();
   const bl = useBlocked();
   const ag = useServiceAgenda();
+  const pay = usePayment();
 
   const [stepName, setStepName] = useState("service");
   const [selIds, setSelIds] = useState([]);
@@ -62,6 +66,10 @@ export default function Booking() {
   const duration = chosen.reduce((a, s) => a + Number(s.duration || 0), 0);
   const price = chosen.reduce((a, s) => a + Number(s.price || 0), 0);
 
+  // Seña: monto fijo cargado por el negocio (nodo `payment`, solo lo escribe el servidor)
+  const dep = paymentConfig(pay.data || {});
+  const deposit = dep.on ? depositAmountFor(price, dep.amount) : 0;
+
   const eligible = chosen.length
     ? pros.filter((p) =>
         chosen.every((s) => {
@@ -82,6 +90,9 @@ export default function Booking() {
 
   const locksState = useLocks(activePros.map((p) => p.id), date);
 
+  // Libera los horarios de turnos que vencieron sin seña (lo decide el servidor)
+  useEffect(() => { triggerSweep(); }, []);
+
   // El título de la pestaña y el color de acento siguen la configuración
   useEffect(() => {
     if (c.accentColor) document.documentElement.style.setProperty("--accent", c.accentColor);
@@ -91,7 +102,7 @@ export default function Booking() {
   // ---- carga / errores ----
   const error = cfg.error || sv.error || pr.error || av.error || bl.error;
   if (error) return <Shell><p className="form-error">No se pudo cargar: {error}</p></Shell>;
-  if (cfg.loading || sv.loading || pr.loading || av.loading || bl.loading || ag.loading)
+  if (cfg.loading || sv.loading || pr.loading || av.loading || bl.loading || ag.loading || pay.loading)
     return <div className="splash"><div className="spinner" /></div>;
   if (!cfg.data) return <Shell><p>Negocio no configurado.</p></Shell>;
 
@@ -188,6 +199,10 @@ export default function Booking() {
         slots: cells,
       };
       if (client.notes.trim()) record.notes = client.notes.trim();
+      if (deposit > 0) {
+        record.depositAmount = deposit;
+        record.depositStatus = "pendiente";
+      }
 
       // Una sola escritura atómica: el turno + todas sus celdas de bloqueo.
       // Si alguien ya ocupó una celda, las reglas de Firebase rechazan TODO.
@@ -196,7 +211,7 @@ export default function Booking() {
       await update(ref(db, P.base), updates);
 
       notifyAuto("nuevo", id); // WhatsApp automático (si está configurado); no bloquea la reserva
-      setDone({ id, code: id.slice(-6).toUpperCase() });
+      setDone({ id, code: id.slice(-6).toUpperCase(), deposit });
     } catch (e) {
       const msg = String(e?.code || e?.message || "");
       if (/PERMISSION_DENIED/i.test(msg)) {
@@ -220,6 +235,7 @@ export default function Booking() {
       bookingMessage({
         businessName: c.name, name: client.name.trim(), service: serviceNames,
         pro: slotPro?.name, dateText: dateLabel(date), time: slot.time, price, code: done.code,
+        deposit: done.deposit,
       })
     );
     return (
@@ -235,11 +251,19 @@ export default function Booking() {
               ["Fecha", dateLabel(date)],
               ["Hora", `${slot.time} hs`],
               ["Precio", money(price)],
+              ...(done.deposit > 0 ? [["Seña a abonar", money(done.deposit)]] : []),
             ]}
           />
-          <p className="muted small">El turno queda <b>pendiente</b> hasta que el negocio lo confirme.</p>
+          {done.deposit > 0 && (
+            <DepositBox amount={done.deposit} alias={dep.alias} holder={dep.holder} bank={dep.bank} />
+          )}
+          <p className="muted small">
+            {done.deposit > 0
+              ? <>Tu horario queda <b>reservado</b>. Se confirma cuando el negocio reciba la seña: mandá el comprobante por WhatsApp.</>
+              : <>El turno queda <b>pendiente</b> hasta que el negocio lo confirme.</>}
+          </p>
           <div className="btn-col">
-            {link && <a className="btn" href={link} target="_blank" rel="noreferrer">Enviar detalles por WhatsApp</a>}
+            {link && <a className="btn" href={link} target="_blank" rel="noreferrer">{done.deposit > 0 ? "Enviar comprobante por WhatsApp" : "Enviar detalles por WhatsApp"}</a>}
             <Link className="btn ghost" to="/">Volver al inicio</Link>
           </div>
           {link && <p className="muted small">Se abre WhatsApp con el mensaje listo; tenés que tocar “enviar”.</p>}
@@ -389,11 +413,17 @@ export default function Booking() {
               ["Hora", `${slot?.time} hs`],
               ["Duración", `${duration} min`],
               ["Precio", money(price)],
+              ...(deposit > 0 ? [["Seña a abonar", money(deposit)]] : []),
               ["A nombre de", client.name.trim()],
               ["WhatsApp", client.phone.trim()],
               ...(client.notes.trim() ? [["Observaciones", client.notes.trim()]] : []),
             ]}
           />
+          {deposit > 0 && (
+            <p className="muted small">
+              Para reservar se pide una seña de <b>{money(deposit)}</b>. Al confirmar vas a ver los datos de la cuenta; tenés {DEPOSIT_HOURS} hs para abonarla. Si no se acredita, el turno se cancela solo a las {EXPIRE_HOURS} hs.
+            </p>
+          )}
           {c.cancelPolicy && <p className="muted small">{c.cancelPolicy}</p>}
           {bookError && <p className="form-error">{bookError}</p>}
           <div className="sticky-cta">

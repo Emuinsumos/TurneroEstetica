@@ -103,6 +103,7 @@ export default async function handler(req, res) {
           "🔔 Nuevo turno reservado", "",
           `Cliente: ${a.clientName} (${a.clientPhone})`, `Servicio: ${a.serviceName}`,
           `Profesional: ${a.professionalName}`, `Fecha: ${dateText}`, `Hora: ${a.time}`,
+          ...(Number(a.depositAmount) > 0 ? [`Seña pendiente: $${Number(a.depositAmount).toLocaleString("es-AR")}`] : []),
         ].join("\n");
         tasks.push(["dueño", sendWa(owner, "dueno", txt, params)]);
       }

@@ -1,1 +1,4 @@
-{ "rewrites": [{ "source": "/((?!api/).*)", "destination": "/" }] }
+{
+  "rewrites": [{ "source": "/((?!api/).*)", "destination": "/" }],
+  "crons": [{ "path": "/api/sweep", "schedule": "0 7 * * *" }]
+}
