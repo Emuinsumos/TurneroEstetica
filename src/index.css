@@ -306,3 +306,24 @@ input:focus, select:focus, textarea:focus { outline: none; border-color: var(--a
 .brand-ic { border: 1px solid rgba(255,255,255,.18); width: 52px; height: 52px; border-radius: 50%; display: grid; place-items: center; color: #fff; box-shadow: 0 6px 18px rgba(0,0,0,.35); transition: transform .15s ease; }
 .brand-ic:hover, .brand-ic:active { transform: translateY(-2px) scale(1.06); }
 .car-count { position: absolute; right: 12px; bottom: 10px; font-size: .75rem; background: rgba(0,0,0,.55); color: #fff; padding: 3px 10px; border-radius: 999px; }
+
+/* seña */
+.deposit { background: var(--card); border: 1px solid var(--accent); border-radius: var(--radius); padding: 18px 16px; display: grid; gap: 10px; text-align: center; }
+.deposit .kicker { margin-bottom: 0; }
+.deposit-amount { font-family: var(--display); font-size: 2.6rem; font-weight: 600; line-height: 1; color: var(--accent); }
+.deposit-alias { display: flex; align-items: center; justify-content: space-between; gap: 12px; text-align: left; background: var(--bg2); border: 1px solid var(--line); border-radius: 12px; padding: 10px 14px; }
+.deposit-alias > div { display: grid; min-width: 0; }
+.deposit-alias b { overflow-wrap: anywhere; font-size: 1.05rem; }
+.tag.dep-pending { color: #b45309; border-color: #b45309; }
+.tag.dep-overdue { color: #fff; background: #b91c1c; border-color: #b91c1c; font-weight: 600; }
+.tag.dep-paid { color: #15803d; border-color: #15803d; }
+.alert-card { background: #fef2f2; border: 1px solid #b91c1c; border-radius: 12px; padding: 14px 16px; display: grid; gap: 10px; }
+.alert-card h3 { color: #b91c1c; }
+.alert-card .admin-row { background: #fff; }
+.tab-badge { display: inline-block; min-width: 18px; margin-left: 6px; padding: 0 6px; border-radius: 999px; background: #b91c1c; color: #fff; font-size: .72rem; font-weight: 700; line-height: 18px; text-align: center; }
+.deposit-account { margin: 0; text-align: left; background: var(--bg2); border: 1px solid var(--line); border-radius: 12px; padding: 4px 14px; }
+.deposit-account:empty { display: none; }
+.deposit-account div { display: flex; justify-content: space-between; gap: 12px; padding: 8px 0; border-bottom: 1px solid var(--line); }
+.deposit-account div:last-child { border-bottom: 0; }
+.deposit-account dt { color: var(--muted); font-size: .85rem; }
+.deposit-account dd { margin: 0; font-weight: 600; text-align: right; overflow-wrap: anywhere; }

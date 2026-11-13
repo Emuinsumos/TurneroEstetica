@@ -63,3 +63,16 @@ export async function registerFail(ref, rec) {
   const count = (rec.until && rec.until <= now ? 0 : rec.count || 0) + 1;
   await ref.set({ count: count >= MAX_ATTEMPTS ? 0 : count, until: count >= MAX_ATTEMPTS ? now + LOCK_MS : 0 });
 }
+
+// El que llama tiene que traer un token de admin de ESTE negocio (el que entrega /api/admin-login).
+export async function requireAdmin(req, res) {
+  const h = String(req.headers.authorization || "");
+  const token = h.startsWith("Bearer ") ? h.slice(7) : "";
+  if (!token) { res.status(401).json({ error: "Sesión no válida" }); return false; }
+  try {
+    const t = await admin.auth().verifyIdToken(token);
+    if (t.role === "admin" && t.businessId === businessId()) return true;
+  } catch { /* cae al error de abajo */ }
+  res.status(403).json({ error: "Sin permisos" });
+  return false;
+}

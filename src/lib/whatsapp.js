@@ -19,7 +19,7 @@ export function waLink(number, text) {
   return `https://wa.me/${n}?text=${encodeURIComponent(text)}`;
 }
 
-export function bookingMessage({ businessName, name, service, pro, dateText, time, price, code }) {
+export function bookingMessage({ businessName, name, service, pro, dateText, time, price, code, deposit }) {
   return [
     `¡Hola${businessName ? ` ${businessName}` : ""}! Reservé un turno:`,
     "",
@@ -29,7 +29,21 @@ export function bookingMessage({ businessName, name, service, pro, dateText, tim
     `Fecha: ${dateText}`,
     `Hora: ${time}`,
     price > 0 ? `Precio: $${Number(price).toLocaleString("es-AR")}` : null,
+    deposit > 0 ? `Seña: $${Number(deposit).toLocaleString("es-AR")} (te adjunto el comprobante)` : null,
     `Código: ${code}`,
+  ].filter((l) => l !== null).join("\n");
+}
+
+// Reclamo de seña (lo manda el negocio al cliente cuando venció el plazo)
+export function depositReminderMessage(a, dateText, { businessName, alias, hours = 72 } = {}) {
+  const first = String(a.clientName || "").split(" ")[0];
+  return [
+    `Hola, ${first}! Te escribimos${businessName ? ` de ${businessName}` : ""}.`,
+    "",
+    `Todavía no recibimos la seña de $${Number(a.depositAmount).toLocaleString("es-AR")} de tu turno del ${dateText} a las ${a.time} (${a.serviceName}).`,
+    alias ? `Alias para transferir: ${alias}` : null,
+    "",
+    `Si ya la abonaste, mandanos el comprobante por este medio. Si no la recibimos, el turno se cancela automáticamente a las ${hours} hs de la reserva.`,
   ].filter((l) => l !== null).join("\n");
 }
 

@@ -1,9 +1,11 @@
 import { useState } from "react";
-import { useAppointments, useServices, useProfessionals, useConfig, toList } from "../../lib/data";
+import { useAppointments, useServices, useProfessionals, useConfig, usePayment, toList } from "../../lib/data";
 import { todayAR } from "../../lib/db";
 import { dateLabel, addDays, weekday } from "../../lib/availability";
 import { money } from "../../lib/hours";
-import { clientMessage, clientWaNumber, waLink } from "../../lib/whatsapp";
+import { clientMessage, clientWaNumber, waLink, depositReminderMessage } from "../../lib/whatsapp";
+import { depositState, hoursSinceBooked, hoursUntilExpire, DEPOSIT_HOURS, EXPIRE_HOURS } from "../../lib/deposit";
+import { useNow } from "../../lib/useNow";
 import { STATUSES, isActive } from "../../lib/appointmentPlan";
 import { saveAppointment, withoutId } from "../../lib/appointmentsApi";
 import { notifyAuto } from "../../lib/notify";
@@ -34,22 +36,34 @@ function shift(view, anchor, dir) {
   return `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, "0")}-01`;
 }
 const fmtAt = (at) => (typeof at === "number" ? new Date(at).toLocaleString("es-AR", { dateStyle: "short", timeStyle: "short" }) : "");
+const SENA_FILTER = "__sena"; // filtro especial: turnos con la seña pendiente o vencida
 
-export default function AppointmentsAdmin() {
+function DepositTag({ a, now }) {
+  const s = depositState(a, now);
+  if (s === "overdue") return <span className="tag dep-overdue">⚠ Todavía no señó</span>;
+  if (s === "pending") return <span className="tag dep-pending">Seña pendiente</span>;
+  if (s === "paid") return <span className="tag dep-paid">Seña recibida</span>;
+  if (s === "waived") return <span className="tag">Seña eximida</span>;
+  return null;
+}
+
+export default function AppointmentsAdmin({ initialId = null }) {
   const ap = useAppointments();
   const sv = useServices();
   const pr = useProfessionals();
   const cfg = useConfig();
+  const pay = usePayment();
   const [view, setView] = useState("semana");
   const [anchor, setAnchor] = useState(todayAR());
   const [fPro, setFPro] = useState("");
   const [fSrv, setFSrv] = useState("");
   const [fSt, setFSt] = useState("");
-  const [mode, setMode] = useState({ name: "list" }); // list | new | edit | detail
+  const [mode, setMode] = useState(initialId ? { name: "detail", id: initialId } : { name: "list" }); // list | new | edit | detail
   const [notice, setNotice] = useState(null);
   const [st, run] = useSave();
+  const now = useNow();
 
-  if (ap.loading || sv.loading || pr.loading || cfg.loading) return <p className="muted">Cargando…</p>;
+  if (ap.loading || sv.loading || pr.loading || cfg.loading || pay.loading) return <p className="muted">Cargando…</p>;
   if (ap.error) return <p className="form-error">No se pudo leer: {ap.error}</p>;
 
   const all = toList(ap.data);
@@ -87,6 +101,22 @@ export default function AppointmentsAdmin() {
     }
   }
 
+  // Seña recibida / eximida: si el turno estaba pendiente pasa a confirmado y ya no se cancela solo.
+  async function settleDeposit(a, kind) {
+    const paid = kind === "recibida";
+    const ok = await run(async () => {
+      const confirming = a.status === "pendiente";
+      const next = { ...withoutId(a), depositStatus: kind, status: confirming ? "confirmado" : a.status };
+      if (paid) next.depositPaidAt = Date.now();
+      await saveAppointment({
+        id: a.id, existing: a, next, buffer,
+        action: paid ? "Seña recibida" : "Seña eximida",
+        detail: `${paid ? `Seña de ${money(a.depositAmount)} recibida` : "Se eximió de la seña"}${confirming ? " · Pendiente → Confirmado" : ""}`,
+      });
+    }, paid ? "Seña registrada ✓" : "Seña eximida ✓");
+    if (ok && a.status === "pendiente") offerWa("confirmado", { ...a, status: "confirmado" }, a);
+  }
+
   async function cancel(a) {
     if (!window.confirm(`¿Cancelar el turno de ${a.clientName}? El horario queda libre y el registro se conserva.`)) return;
     const reason = window.prompt("Motivo (opcional):") || "";
@@ -115,20 +145,38 @@ export default function AppointmentsAdmin() {
     const hist = Object.values(a.history || {}).sort((x, y) => (x.at || 0) - (y.at || 0));
     const link = waLink(clientWaNumber(a.clientPhone), `Hola ${String(a.clientName).split(" ")[0]}, te escribimos${bizName ? ` de ${bizName}` : ""} por tu turno del ${dateLabel(a.date)} a las ${a.time}.`);
     const final = a.status === "cancelado";
+    const dState = depositState(a, now);
+    const dHours = hoursSinceBooked(a, now);
+    const dLink = dState === "overdue" || dState === "pending"
+      ? waLink(clientWaNumber(a.clientPhone), depositReminderMessage(a, dateLabel(a.date), { businessName: bizName, alias: pay.data?.alias, hours: EXPIRE_HOURS }))
+      : null;
     return (
       <div className="admin-stack">
         <button className="btn ghost sm" style={{ justifySelf: "start" }} onClick={() => { setNotice(null); setMode({ name: "list" }); }}>← Volver a la lista</button>
         <NoticeBox notice={notice} onClose={() => setNotice(null)} />
         <div className="admin-card">
-          <h3>{a.clientName} <span className={`tag st-${a.status}`}>{STATUS_LABEL[a.status] || a.status}</span></h3>
+          <h3>{a.clientName} <span className={`tag st-${a.status}`}>{STATUS_LABEL[a.status] || a.status}</span><DepositTag a={a} now={now} /></h3>
           <p>{dateLabel(a.date)} · <b>{a.time}</b>{a.endTime ? ` a ${a.endTime}` : ""}</p>
           <p className="muted">{a.serviceName} · {a.professionalName} · {money(a.priceAtBooking)}</p>
           <p className="muted">Tel: {a.clientPhone}</p>
           {a.notes && <p className="muted">“{a.notes}”</p>}
+          {Number(a.depositAmount) > 0 && (
+            <p className={dState === "overdue" ? "form-error" : "muted"}>
+              Seña: <b>{money(a.depositAmount)}</b> ·{" "}
+              {dState === "paid" && `recibida${typeof a.depositPaidAt === "number" ? ` el ${fmtAt(a.depositPaidAt)}` : ""}`}
+              {dState === "waived" && "eximida (no se cobra)"}
+              {dState === "pending" && `pendiente: reservó hace ${dHours ?? "?"} hs y tiene ${DEPOSIT_HOURS} hs para abonarla`}
+              {dState === "overdue" && `⚠ TODAVÍA NO SEÑÓ: reservó hace ${dHours} hs. Si no la marcás como recibida, el turno se cancela solo en ${hoursUntilExpire(a, now)} hs (o cancelalo vos).`}
+              {dState === null && (a.depositStatus === "recibida" ? "recibida" : "sin cobrar")}
+            </p>
+          )}
           <Status st={st} />
           <div className="btn-row">
+            {(dState === "pending" || dState === "overdue") && <button className="btn sm" disabled={st.busy} onClick={() => settleDeposit(a, "recibida")}>Seña recibida</button>}
+            {(dState === "pending" || dState === "overdue") && <button className="btn ghost sm" disabled={st.busy} onClick={() => settleDeposit(a, "eximida")}>Eximir seña</button>}
+            {dLink && <a className="btn ghost sm" href={dLink} target="_blank" rel="noreferrer">Reclamar seña</a>}
             {!final && <button className="btn sm" onClick={() => setMode({ name: "edit", id: a.id })}>Modificar</button>}
-            {a.status === "pendiente" && <button className="btn sm" disabled={st.busy} onClick={() => changeStatus(a, "confirmado")}>Confirmar</button>}
+            {a.status === "pendiente" && dState !== "pending" && dState !== "overdue" && <button className="btn sm" disabled={st.busy} onClick={() => changeStatus(a, "confirmado")}>Confirmar</button>}
             {(a.status === "confirmado" || a.status === "pendiente") && <button className="btn ghost sm" disabled={st.busy} onClick={() => changeStatus(a, "completado")}>Completado</button>}
             {(a.status === "confirmado" || a.status === "pendiente") && <button className="btn ghost sm" disabled={st.busy} onClick={() => changeStatus(a, "ausente")}>Ausente</button>}
             {!final && <button className="btn ghost sm" disabled={st.busy} onClick={() => cancel(a)}>Cancelar turno</button>}
@@ -162,7 +210,7 @@ export default function AppointmentsAdmin() {
   const [from, to] = range(view, anchor);
   const list = all
     .filter((a) => a.date >= from && a.date <= to)
-    .filter((a) => (!fPro || a.professionalId === fPro) && (!fSrv || a.serviceId === fSrv) && (!fSt || a.status === fSt))
+    .filter((a) => (!fPro || a.professionalId === fPro) && (!fSrv || a.serviceId === fSrv) && (!fSt || (fSt === SENA_FILTER ? ["pending", "overdue"].includes(depositState(a, now)) : a.status === fSt)))
     .sort((a, b) => `${a.date}${a.time}`.localeCompare(`${b.date}${b.time}`));
   const byDate = {};
   for (const a of list) (byDate[a.date] = byDate[a.date] || []).push(a);
@@ -199,6 +247,7 @@ export default function AppointmentsAdmin() {
         </select>
         <select value={fSt} onChange={(e) => setFSt(e.target.value)}>
           <option value="">Todos los estados</option>
+          <option value={SENA_FILTER}>Seña pendiente o vencida</option>
           {STATUSES.map((s) => <option key={s} value={s}>{STATUS_LABEL[s]}</option>)}
         </select>
       </div>
@@ -209,7 +258,7 @@ export default function AppointmentsAdmin() {
           {items.map((a) => (
             <button type="button" className={`admin-row row-btn${isActive(a.status) ? "" : " dim"}`} key={a.id} onClick={() => { setNotice(null); setMode({ name: "detail", id: a.id }); }}>
               <div>
-                <b>{a.time}</b> · {a.clientName} <span className={`tag st-${a.status}`}>{STATUS_LABEL[a.status] || a.status}</span>
+                <b>{a.time}</b> · {a.clientName} <span className={`tag st-${a.status}`}>{STATUS_LABEL[a.status] || a.status}</span><DepositTag a={a} now={now} />
                 <p className="muted small">{a.serviceName} · {a.professionalName} · {money(a.priceAtBooking)}</p>
               </div>
               <span className="muted">›</span>
