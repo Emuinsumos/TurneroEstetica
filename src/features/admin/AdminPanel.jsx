@@ -20,6 +20,7 @@ import { useNow } from "../../lib/useNow";
 import { money } from "../../lib/hours";
 import AppointmentsAdmin from "./AppointmentsAdmin";
 import TomorrowAdmin from "./TomorrowAdmin";
+import PushToggle from "./PushToggle";
 
 const TABS = [
   { id: "resumen", label: "Resumen" },
@@ -149,6 +150,7 @@ export default function AdminPanel() {
       </nav>
 
       <main className="wrap" style={{ paddingTop: 24, paddingBottom: 60 }}>
+        <PushToggle />
         {tab === "resumen" && <Summary onOpen={(id) => { setOpenId(id); setTab("turnos"); }} />}
         {tab === "servicios" && <ServicesAdmin />}
         {tab === "equipo" && <ProfessionalsAdmin />}

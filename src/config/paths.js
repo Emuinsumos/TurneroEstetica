@@ -18,4 +18,5 @@ export const P = {
   slotLocks: (profId, date) => `${base}/slotLocks/${profId}/${date}`,
   media: `${base}/media`,
   auditLog: `${base}/auditLog`,
+  push: `${base}/push`,
 };

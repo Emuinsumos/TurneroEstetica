@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { notifyAuto } from "../../lib/notify";
+import { notifyPush } from "../../lib/push";
 import { Link } from "react-router-dom";
 import { ref, update, serverTimestamp } from "firebase/database";
 import { db } from "../../config/firebase";
@@ -211,6 +212,7 @@ export default function Booking() {
       await update(ref(db, P.base), updates);
 
       notifyAuto("nuevo", id); // WhatsApp automático (si está configurado); no bloquea la reserva
+      notifyPush(id); // aviso push al celular del dueño; no bloquea la reserva
       setDone({ id, code: id.slice(-6).toUpperCase(), deposit });
     } catch (e) {
       const msg = String(e?.code || e?.message || "");

@@ -69,6 +69,13 @@
             ".read": "auth.token.role === 'admin' && auth.token.businessId === $b",
             ".write": false
           },
+          "push": {
+            ".read": "auth.token.role === 'admin' && auth.token.businessId === $b",
+            "$id": {
+              ".write": "auth.token.role === 'admin' && auth.token.businessId === $b",
+              ".validate": "!newData.exists() || (newData.hasChildren(['sub','createdAt']) && newData.child('sub').child('endpoint').isString() && newData.child('sub').child('endpoint').val().matches(/^https:\\/\\//) && newData.child('sub').child('endpoint').val().length <= 600 && newData.child('createdAt').isNumber())"
+            }
+          },
           "payment": {
             ".read": true,
             ".write": false
