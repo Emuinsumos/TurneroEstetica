@@ -5,7 +5,6 @@
     "description": "Cortes y barba. Reservá tu turno online.",
     "accentColor": "#c9a24b",
     "timezone": "America/Argentina/Buenos_Aires",
-    "slotMinutes": 30,
     "bufferMinutes": 0,
     "minNoticeHours": 1,
     "maxDaysAhead": 30,

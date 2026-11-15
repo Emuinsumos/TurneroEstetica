@@ -5,7 +5,6 @@
     "description": "Lifting de pestañas, depilación, uñas y más. Reservá tu turno online.",
     "accentColor": "#a8566b",
     "timezone": "America/Argentina/Buenos_Aires",
-    "slotMinutes": 15,
     "bufferMinutes": 0,
     "minNoticeHours": 2,
     "maxDaysAhead": 30,

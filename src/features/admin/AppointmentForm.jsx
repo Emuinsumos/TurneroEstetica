@@ -34,7 +34,6 @@ export default function AppointmentForm({ existing, onSaved, onCancel }) {
 
   const c = cfg.data || {};
   const buffer = num(c.bufferMinutes, 0, 0);
-  const step = num(c.slotMinutes, 5, 15);
   const tz = c.timezone || "America/Argentina/Buenos_Aires";
 
   const services = toList(sv.data).filter((s) => !s.deleted && (s.active !== false || s.id === existing?.serviceId));
@@ -59,7 +58,7 @@ export default function AppointmentForm({ existing, onSaved, onCancel }) {
       date: f.date, weekly: av.data?.[f.professionalId]?.weekly,
       agenda: agendaTimesFor(service, ag.data, f.date),
       blocks: blocksFor(toList(bl.data), f.professionalId), locks,
-      duration, buffer, step, tz, minNoticeHours: 0, maxDaysAhead: 3650,
+      duration, buffer, tz, minNoticeHours: 0, maxDaysAhead: 3650,
     });
     // el horario actual del turno siempre se puede conservar
     if (existing && existing.professionalId === f.professionalId && existing.date === f.date && !out.includes(existing.time)) {
@@ -67,7 +66,7 @@ export default function AppointmentForm({ existing, onSaved, onCancel }) {
       out.sort();
     }
     return out;
-  }, [f.professionalId, f.date, duration, locksQ, av.data, bl.data, ag.data, service, buffer, step, tz, existing]);
+  }, [f.professionalId, f.date, duration, locksQ, av.data, bl.data, ag.data, service, buffer, tz, existing]);
 
   if (sv.loading || pr.loading || av.loading || bl.loading || cfg.loading || ag.loading) return <p className="muted">Cargando…</p>;
 

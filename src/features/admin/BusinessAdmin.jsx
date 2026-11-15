@@ -21,7 +21,7 @@ function BusinessForm({ c }) {
     instagram: c.instagram || "", facebook: c.facebook || "", tiktok: c.tiktok || "",
     shopUrl: c.shopUrl || "",
     cancelPolicy: c.cancelPolicy || "",
-    slotMinutes: String(c.slotMinutes ?? 15), bufferMinutes: String(c.bufferMinutes ?? 0),
+    bufferMinutes: String(c.bufferMinutes ?? 0),
     minNoticeHours: String(c.minNoticeHours ?? 2), maxDaysAhead: String(c.maxDaysAhead ?? 30),
     clientChoosesProfessional: c.clientChoosesProfessional !== false,
     allowMultiService: !!c.allowMultiService,
@@ -61,7 +61,6 @@ function BusinessForm({ c }) {
         tiktok: optional(f.tiktok),
         shopUrl: optional(f.shopUrl),
         cancelPolicy: optional(f.cancelPolicy),
-        slotMinutes: num("slotMinutes", 5, "El intervalo de turnos"),
         bufferMinutes: num("bufferMinutes", 0, "El tiempo entre clientes"),
         minNoticeHours: num("minNoticeHours", 0, "La anticipación mínima"),
         maxDaysAhead: num("maxDaysAhead", 1, "Los días de reserva a futuro"),
@@ -99,7 +98,6 @@ function BusinessForm({ c }) {
       <div className="admin-card">
         <h3>Reservas</h3>
         <div className="grid2">
-          {text("slotMinutes", "Intervalo de turnos (min)", { type: "number", inputMode: "numeric", min: 5, step: 5 })}
           {text("bufferMinutes", "Tiempo entre clientes (min)", { type: "number", inputMode: "numeric", min: 0, step: 5 })}
           {text("minNoticeHours", "Anticipación mínima (hs)", { type: "number", inputMode: "numeric", min: 0 })}
           {text("maxDaysAhead", "Reservar hasta (días)", { type: "number", inputMode: "numeric", min: 1 })}

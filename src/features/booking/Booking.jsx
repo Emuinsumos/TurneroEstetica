@@ -49,7 +49,6 @@ export default function Booking() {
   // ---- configuración (con valores por defecto) ----
   const c = cfg.data || {};
   const tz = c.timezone || "America/Argentina/Buenos_Aires";
-  const stepMin = num(c.slotMinutes, 5, 15);
   const buffer = num(c.bufferMinutes, 0, 0);
   const notice = num(c.minNoticeHours, 0, 2);
   const maxDays = num(c.maxDaysAhead, 1, 30);
@@ -120,7 +119,7 @@ export default function Booking() {
     weekly: av.data?.[p.id]?.weekly,
     agenda: agendaFor(d),
     blocks: blocksFor(blocks, p.id),
-    duration, buffer, step: stepMin, tz, minNoticeHours: notice, maxDaysAhead: maxDays,
+    duration, buffer, tz, minNoticeHours: notice, maxDaysAhead: maxDays,
   });
   const today = nowInTz(tz).date;
   const maxDate = addDays(today, maxDays);

@@ -69,13 +69,17 @@ export function agendaTimesFor(service, agendaAll, date) {
 
 /**
  * Horarios libres ("HH:MM") de un profesional en una fecha.
+ * No hay "intervalo de turnos": los turnos se encadenan según la duración del servicio.
+ * Arrancan en la hora de apertura y cada uno empieza cuando termina el anterior
+ * (duración + tiempo entre clientes). Si hay un descanso, un bloqueo o un turno ya
+ * reservado, el siguiente horario arranca justo cuando eso termina.
  * locks: { "0900": "idTurno", ... } de ese profesional y fecha (null = ignorar reservas)
  * agenda: null (usa el horario semanal) o lista ["10:00", "11:30"] (servicios con agenda:
- *         reemplaza el horario semanal; bloqueos, reservas y duración se siguen respetando)
+ *         son los horarios que cargó el comercio; bloqueos, reservas y duración se siguen respetando)
  */
 export function getSlots({
   date, weekly, agenda = null, blocks = [], locks = null,
-  duration, buffer = 0, step = 15, tz,
+  duration, buffer = 0, tz,
   minNoticeHours = 0, maxDaysAhead = 30,
 }) {
   if (!date || !(duration > 0)) return [];
@@ -91,17 +95,27 @@ export function getSlots({
   }
 
   const span = duration + buffer;
-  const free = (s) => {
+  const tooSoon = (s) => diff * 1440 + s < now.minutes + minNoticeHours * 60;
+
+  // Si el horario s choca con un bloqueo o una reserva, devuelve el minuto en que
+  // eso termina (para saltar hasta ahí). Si está libre, devuelve null.
+  const obstacleEnd = (s) => {
     const e = s + duration;
-    if (diff * 1440 + s < now.minutes + minNoticeHours * 60) return false;
-    if (ranges.some(([rs, re]) => s < re && e > rs)) return false;
-    if (locks && lockCells(s, span).some((k) => locks[k])) return false;
-    return true;
+    let end = null;
+    for (const [rs, re] of ranges) {
+      if (s < re && e > rs) end = Math.max(end ?? 0, re);
+    }
+    if (locks) {
+      for (const k of lockCells(s, span)) {
+        if (locks[k]) end = Math.max(end ?? 0, toMin(`${k.slice(0, 2)}:${k.slice(2)}`) + GRAIN);
+      }
+    }
+    return end;
   };
 
   if (Array.isArray(agenda)) {
     const starts = Array.from(new Set(agenda.map(toMin).filter((m) => Number.isFinite(m)))).sort((a, b) => a - b);
-    return starts.filter(free).map(toHHMM);
+    return starts.filter((s) => !tooSoon(s) && obstacleEnd(s) === null).map(toHHMM);
   }
 
   const day = weekly && weekly[weekday(date)];
@@ -113,11 +127,19 @@ export function getSlots({
   const bTo = day.breakTo ? toMin(day.breakTo) : null;
 
   const out = [];
-  for (let s = open; s + duration <= close; s += step) {
+  let s = open;
+  while (s + duration <= close) {
     const e = s + duration;
-    if (bFrom !== null && bTo !== null && s < bTo && e > bFrom) continue;
-    if (!free(s)) continue;
-    out.push(toHHMM(s));
+    let next;
+    if (bFrom !== null && bTo !== null && s < bTo && e > bFrom) {
+      next = bTo; // cae en el descanso: sigue cuando termina
+    } else {
+      const end = obstacleEnd(s);
+      if (end !== null) next = end;
+      else if (tooSoon(s)) next = s + span;
+      else { out.push(toHHMM(s)); next = s + span; }
+    }
+    s = Math.max(next, s + GRAIN); // siempre avanza
   }
   return out;
 }
