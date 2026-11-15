@@ -71,7 +71,8 @@ export function agendaTimesFor(service, agendaAll, date) {
  * Horarios libres ("HH:MM") de un profesional en una fecha.
  * No hay "intervalo de turnos": los turnos se encadenan según la duración del servicio.
  * Arrancan en la hora de apertura y cada uno empieza cuando termina el anterior
- * (duración + tiempo entre clientes). Si hay un descanso, un bloqueo o un turno ya
+ * (duración + tiempo entre clientes). El horario "hasta" es la última hora en que
+ * puede empezar un turno (el último turno puede terminar pasada esa hora). Si hay un descanso, un bloqueo o un turno ya
  * reservado, el siguiente horario arranca justo cuando eso termina.
  * locks: { "0900": "idTurno", ... } de ese profesional y fecha (null = ignorar reservas)
  * agenda: null (usa el horario semanal) o lista ["10:00", "11:30"] (servicios con agenda:
@@ -128,7 +129,8 @@ export function getSlots({
 
   const out = [];
   let s = open;
-  while (s + duration <= close) {
+  // "close" es la última hora en que puede EMPEZAR un turno: el turno puede terminar después
+  while (s < close && s + duration <= 1440) {
     const e = s + duration;
     let next;
     if (bFrom !== null && bTo !== null && s < bTo && e > bFrom) {
