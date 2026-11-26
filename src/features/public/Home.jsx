@@ -6,7 +6,8 @@ import {
 import Img from "../../components/Img";
 import BrandIcon, { BRAND_BG } from "../../components/BrandIcon";
 import { useImgUrl } from "../../lib/media";
-import { dayRows, businessWeekly, money, initials, groupByCategory } from "../../lib/hours";
+import { dayRows, businessWeekly, money, initials } from "../../lib/hours";
+import { useServiceFilter, ServiceTools, NoResults } from "../../components/ServiceTools";
 
 const Icon = {
   clock: (
@@ -25,6 +26,34 @@ const Icon = {
 
 function Reveal({ children, className = "" }) {
   return <div className={`reveal ${className}`}>{children}</div>;
+}
+
+// Lista de servicios agrupada por categoría. Con muchos servicios suma buscador y filtro por categoría.
+function ServicesList({ services }) {
+  const f = useServiceFilter(services);
+  return (
+    <>
+      <ServiceTools f={f} />
+      <div className="svc-list">
+        {f.groups.map((g) => (
+          <div key={g.category || "_"} className="svc-group">
+            {g.category && <h3 className="cat-title">{g.category}</h3>}
+            {g.items.map((s) => (
+              <Reveal key={s.id} className="svc">
+                <div className="svc-main">
+                  <h3>{s.name}</h3>
+                  {s.description && <p className="muted">{s.description}</p>}
+                  <span className="chip">{Icon.clock} {s.duration} min</span>
+                </div>
+                <div className="price">{money(s.price)}</div>
+              </Reveal>
+            ))}
+          </div>
+        ))}
+      </div>
+      <NoResults f={f} />
+    </>
+  );
 }
 
 export default function Home() {
@@ -107,23 +136,7 @@ export default function Home() {
         <section id="servicios" className="section">
           <div className="wrap">
             <Reveal><p className="kicker">Lo que hacemos</p><h2>Servicios</h2></Reveal>
-            <div className="svc-list">
-              {groupByCategory(services).map((g) => (
-            <div key={g.category || "_"} className="svc-group">
-              {g.category && <h3 className="cat-title">{g.category}</h3>}
-              {g.items.map((s) => (
-                <Reveal key={s.id} className="svc">
-                  <div className="svc-main">
-                    <h3>{s.name}</h3>
-                    {s.description && <p className="muted">{s.description}</p>}
-                    <span className="chip">{Icon.clock} {s.duration} min</span>
-                  </div>
-                  <div className="price">{money(s.price)}</div>
-                </Reveal>
-              ))}
-            </div>
-          ))}
-            </div>
+            <ServicesList services={services} />
             <div className="center"><Link className="btn" to="/reservar">Reservar turno</Link></div>
           </div>
         </section>

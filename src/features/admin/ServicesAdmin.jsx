@@ -4,6 +4,36 @@ import { dbUpdate, newKey } from "../../lib/db";
 import { money } from "../../lib/hours";
 import { P } from "../../config/paths";
 import { Field, Check, Status, useSave, optional } from "./ui";
+import { useServiceFilter, ServiceTools, NoResults } from "../../components/ServiceTools";
+import { canonicalCategory, existingCategories, normalizeText } from "../../lib/serviceFilter";
+
+// Lista del admin: agrupada por categoría y, con muchos servicios, con buscador.
+function ServiceRows({ list, onEdit, onRemove }) {
+  const f = useServiceFilter(list);
+  return (
+    <>
+      <ServiceTools f={f} />
+      {f.groups.map((g) => (
+        <div key={g.category || "_"} className="admin-stack">
+          {g.category && <h3 className="cat-title">{g.category}</h3>}
+          {g.items.map((s) => (
+            <div className="admin-row" key={s.id}>
+              <div>
+                <b>{s.name}</b> {s.active === false && <span className="tag">oculto</span>} {s.agenda === true && <span className="tag">agenda</span>}
+                <p className="muted small">{money(s.price)} · {s.duration} min</p>
+              </div>
+              <div className="btn-row">
+                <button className="btn ghost sm" onClick={() => onEdit(s)}>Editar</button>
+                <button className="btn ghost sm" onClick={() => onRemove(s)}>Eliminar</button>
+              </div>
+            </div>
+          ))}
+        </div>
+      ))}
+      <NoResults f={f} />
+    </>
+  );
+}
 
 export default function ServicesAdmin() {
   const sv = useServices();
@@ -16,16 +46,18 @@ export default function ServicesAdmin() {
   const list = toList(sv.data).filter((s) => !s.deleted).sort((a, b) => (a.order || 0) - (b.order || 0));
   const pros = toList(pr.data).filter((p) => !p.deleted).sort((a, b) => (a.order || 0) - (b.order || 0));
   const set = (k, v) => setForm((f) => ({ ...f, [k]: v }));
+  const cats = existingCategories(list);
 
   const add = () =>
     setForm({
-      id: null, name: "", description: "", price: "0", duration: "30",
+      id: null, name: "", description: "", category: "", price: "0", duration: "30",
       order: String(list.length + 1), active: true, agenda: false, professionalIds: {},
     });
 
   const edit = (s) =>
     setForm({
       id: s.id, name: s.name || "", description: s.description || "",
+      category: (s.category || "").trim(),
       price: String(s.price ?? 0), duration: String(s.duration ?? 30),
       order: String(s.order ?? 1), active: s.active !== false,
       agenda: s.agenda === true,
@@ -47,10 +79,13 @@ export default function ServicesAdmin() {
       if (name.length < 2) throw new Error("Poné un nombre para el servicio");
       if (!(price >= 0)) throw new Error("El precio no es válido");
       if (!(duration >= 5)) throw new Error("La duración mínima es 5 minutos");
+      const category = canonicalCategory(form.category, cats);
+      if (category && category.length > 40) throw new Error("El nombre de la categoría es muy largo (máximo 40 letras)");
       const id = form.id || newKey(P.services);
       await dbUpdate(`${P.services}/${id}`, {
         name,
         description: optional(form.description),
+        category,
         price,
         duration,
         order: Number(form.order) || 0,
@@ -74,11 +109,21 @@ export default function ServicesAdmin() {
         <h3>{form.id ? "Editar servicio" : "Nuevo servicio"}</h3>
         <Field label="Nombre"><input value={form.name} onChange={(e) => set("name", e.target.value)} required /></Field>
         <Field label="Descripción (opcional)"><input value={form.description} onChange={(e) => set("description", e.target.value)} /></Field>
+        <Field label="Categoría (opcional)" hint="Agrupa los servicios en la web, por ejemplo Uñas o Depilación. Escribí una nueva o tocá una que ya tengas.">
+          <input value={form.category} onChange={(e) => set("category", e.target.value)} maxLength={40} placeholder="Ej: Depilación" />
+        </Field>
+        {cats.length > 0 && (
+          <div className="svc-chips wrapped">
+            {cats.map((c) => (
+              <button key={c} type="button" className={`svc-chip ${normalizeText(form.category) === normalizeText(c) ? "on" : ""}`} onClick={() => set("category", c)}>{c}</button>
+            ))}
+          </div>
+        )}
         <div className="grid2">
           <Field label="Precio ($)"><input type="number" min="0" inputMode="numeric" value={form.price} onChange={(e) => set("price", e.target.value)} /></Field>
           <Field label="Duración (min)"><input type="number" min="5" step="5" inputMode="numeric" value={form.duration} onChange={(e) => set("duration", e.target.value)} /></Field>
         </div>
-        <Field label="Orden" hint="Número chico = aparece primero"><input type="number" inputMode="numeric" value={form.order} onChange={(e) => set("order", e.target.value)} /></Field>
+        <Field label="Orden" hint="Número chico = aparece primero. Las categorías se ordenan por su servicio con el número más chico."><input type="number" inputMode="numeric" value={form.order} onChange={(e) => set("order", e.target.value)} /></Field>
         <div className="field">
           <span>Lo realizan</span>
           {pros.length === 0 && <small className="muted">Primero cargá profesionales.</small>}
@@ -108,18 +153,7 @@ export default function ServicesAdmin() {
       </div>
       <Status st={st} />
       {list.length === 0 && <p className="muted">Todavía no hay servicios.</p>}
-      {list.map((s) => (
-        <div className="admin-row" key={s.id}>
-          <div>
-            <b>{s.name}</b> {s.active === false && <span className="tag">oculto</span>} {s.agenda === true && <span className="tag">agenda</span>}
-            <p className="muted small">{money(s.price)} · {s.duration} min</p>
-          </div>
-          <div className="btn-row">
-            <button className="btn ghost sm" onClick={() => edit(s)}>Editar</button>
-            <button className="btn ghost sm" onClick={() => remove(s)}>Eliminar</button>
-          </div>
-        </div>
-      ))}
+      <ServiceRows list={list} onEdit={edit} onRemove={remove} />
     </div>
   );
 }

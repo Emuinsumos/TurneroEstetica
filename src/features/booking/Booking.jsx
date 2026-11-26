@@ -13,7 +13,8 @@ import { triggerSweep } from "../../lib/sweep";
 import {
   getSlots, blocksFor, agendaTimesFor, nowInTz, dayDiff, addDays, dateLabel, toMin, toHHMM, lockCells,
 } from "../../lib/availability";
-import { money, initials, groupByCategory } from "../../lib/hours";
+import { money, initials } from "../../lib/hours";
+import { useServiceFilter, ServiceTools, NoResults } from "../../components/ServiceTools";
 import { waLink, bookingMessage } from "../../lib/whatsapp";
 import { validateClientData } from "../../lib/validation";
 import { depositAmountFor, paymentConfig, DEPOSIT_HOURS, EXPIRE_HOURS } from "../../lib/deposit";
@@ -282,26 +283,7 @@ export default function Booking() {
         <>
           <h2>Elegí el servicio</h2>
           {services.length === 0 && <p className="muted">Por ahora no hay servicios disponibles.</p>}
-          <div className="opt-list">
-            {groupByCategory(services).map((g) => (
-              <div key={g.category || "_"} className="opt-list">
-                {g.category && <h3 className="cat-title">{g.category}</h3>}
-                {g.items.map((s) => {
-                  const on = selIds.includes(s.id);
-                  return (
-                    <button key={s.id} type="button" className={`opt ${on ? "on" : ""}`} onClick={() => toggleService(s)}>
-                      <span className="opt-main">
-                        <b>{s.name}</b>
-                        {s.description && <span className="muted small">{s.description}</span>}
-                        <span className="muted small">{s.duration} min</span>
-                      </span>
-                      <span className="price">{money(s.price)}</span>
-                    </button>
-                  );
-                })}
-              </div>
-            ))}
-          </div>
+          <ServicePicker services={services} selIds={selIds} onPick={toggleService} />
           {multi && (
             <div className="sticky-cta">
               <button className="btn lg" type="button" disabled={chosen.length === 0}
@@ -435,6 +417,37 @@ export default function Booking() {
         </>
       )}
     </Shell>
+  );
+}
+
+// Paso "Elegí el servicio": lista por categoría; con muchos servicios suma buscador y filtro por categoría.
+function ServicePicker({ services, selIds, onPick }) {
+  const f = useServiceFilter(services);
+  return (
+    <>
+      <ServiceTools f={f} />
+      <div className="opt-list">
+        {f.groups.map((g) => (
+          <div key={g.category || "_"} className="opt-list">
+            {g.category && <h3 className="cat-title">{g.category}</h3>}
+            {g.items.map((s) => {
+              const on = selIds.includes(s.id);
+              return (
+                <button key={s.id} type="button" className={`opt ${on ? "on" : ""}`} onClick={() => onPick(s)}>
+                  <span className="opt-main">
+                    <b>{s.name}</b>
+                    {s.description && <span className="muted small">{s.description}</span>}
+                    <span className="muted small">{s.duration} min</span>
+                  </span>
+                  <span className="price">{money(s.price)}</span>
+                </button>
+              );
+            })}
+          </div>
+        ))}
+      </div>
+      <NoResults f={f} />
+    </>
   );
 }
 
